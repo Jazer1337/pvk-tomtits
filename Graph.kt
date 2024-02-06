@@ -2,17 +2,25 @@
 class Graph(private val numNodes: Int) {
 
     // adjacency matrix implementation of graph
-    val nodes = Array(numNodes) { Array(numNodes) { 0 } }
+    private val nodes = Array(numNodes) { Array(numNodes) { 0 } }
+
+    private val nonEmptyNodes = mutableSetOf<Int>()
 
     fun addEdge(from: Int, to: Int, weight: Int) {
         // TODO: a) throw errors or b) ignore loops and weights <= 0?
         nodes[from][to] = weight
         nodes[to][from] = weight
+
+        nonEmptyNodes.add(from)     // only adds if not present since Set
+        nonEmptyNodes.add(to)
     }
 
     fun removeEdge(from: Int, to: Int) {
         nodes[from][to] = 0
         nodes[to][from] = 0
+
+        nonEmptyNodes.remove(from)
+        nonEmptyNodes.remove(to)
     }
 
     fun hasEdge(from: Int, to: Int): Boolean {
@@ -21,15 +29,6 @@ class Graph(private val numNodes: Int) {
 
     fun getWeight(from: Int, to: Int): Int {
         return nodes[from][to]
-    }
-
-    fun nodeHasNeighbor(node: Int): Boolean {
-        for (to in 0 until numNodes) {
-            if (hasEdge(node, to)) {
-                return true
-            }
-        }
-        return false
     }
 
     // NOTE: `from` may be `to` as well, since the graph is undirected
@@ -68,6 +67,10 @@ class Graph(private val numNodes: Int) {
         }
 
         return sb.toString()
+    }
+
+    fun getNonEmptyNodes(): MutableSet<Int> {
+        return nonEmptyNodes.toMutableSet()
     }
 
 }
