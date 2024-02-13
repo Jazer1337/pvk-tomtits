@@ -5,7 +5,8 @@ import (
 	"math/rand"
 )
 
-var graph [][]float64
+var matrix [][]float64
+var graph []Node
 
 type Node struct {
 	x float64
@@ -18,8 +19,9 @@ func GenerateMatrix(amountOfNodes int) [][]float64 {
 		nodes[i].x = rand.Float64() * 100
 		nodes[i].y = rand.Float64() * 100
 	}
+	graph = nodes
 
-	matrix := make([][]float64, amountOfNodes)
+	matrix = make([][]float64, amountOfNodes)
 	for i := range matrix {
 		matrix[i] = make([]float64, amountOfNodes)
 	}
@@ -28,6 +30,14 @@ func GenerateMatrix(amountOfNodes int) [][]float64 {
 			matrix[i][j] = distance(node, target)
 		}
 	}
+	return matrix
+}
+
+func GetGraph() []Node {
+	return graph
+}
+
+func GetMatrix() [][]float64 {
 	return matrix
 }
 
