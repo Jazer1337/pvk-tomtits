@@ -1,4 +1,4 @@
-package tsp
+package internal
 
 import "math/rand"
 
