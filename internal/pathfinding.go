@@ -5,17 +5,17 @@ import (
 	"math"
 )
 
-func FindShortestPath(startingNode int, targetNode int, adjacencyMatrix [][]float64) float64 {
-	distanceTo := make([]float64, len(adjacencyMatrix))
+func FindShortestPath(startingNode int, targetNode int, adjacencyMatrix [][]int) int {
+	distanceTo := make([]int, len(adjacencyMatrix))
 
 	for i := range distanceTo {
 		distanceTo[i] = -1
 	}
 
 	distanceTo[startingNode] = 0
-	distanceTo[targetNode] = math.MaxFloat64
+	distanceTo[targetNode] = math.MaxInt
 
-	prevDistanceTo := make([]float64, len(distanceTo))
+	prevDistanceTo := make([]int, len(distanceTo))
 	copy(prevDistanceTo, distanceTo)
 
 	for true {
@@ -43,7 +43,7 @@ func FindShortestPath(startingNode int, targetNode int, adjacencyMatrix [][]floa
 	return distanceTo[targetNode]
 }
 
-func minElement(slice []float64) float64 {
+func minElement(slice []int) int {
 	min := slice[0]
 	for i := 1; i < len(slice); i++ {
 		if min > slice[i] {
@@ -53,7 +53,7 @@ func minElement(slice []float64) float64 {
 	return min
 }
 
-func isEqual(a, b []float64) bool {
+func isEqual(a, b []int) bool {
 	if len(a) != len(b) {
 		return false
 	}
