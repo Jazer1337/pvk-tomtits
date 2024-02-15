@@ -98,3 +98,14 @@ func (g Graph) String() string {
 
 	return str
 }
+
+func (g *Graph) GenerateSubgraph(nodes []int) Graph {
+	subGraph := NewGraph(len(nodes))
+
+	for i := range nodes {
+		for j := i + 1; j < len(nodes); j++ {
+			subGraph.addEdge(i, j, FindShortestPath(i, j, g.nodes))
+		}
+	}
+	return subGraph
+}
