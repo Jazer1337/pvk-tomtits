@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -19,7 +18,6 @@ func FindShortestPath(startingNode int, targetNode int, adjacencyMatrix [][]int)
 	copy(prevDistanceTo, distanceTo)
 
 	for true {
-		fmt.Println(distanceTo)
 		for i, distance := range distanceTo {
 			if distance < distanceTo[targetNode] && distance >= 0 {
 				for potentialNeighbor, edgeLength := range adjacencyMatrix[i] {
