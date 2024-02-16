@@ -33,7 +33,7 @@ func solveRandom(graph *Graph, startNode int) Solution {
 	// add cost
 	for i := 1; i < len(nodesLeft); i++ {
 		from, to := nodesLeft[i-1], nodesLeft[i]
-		sol.cost += graph.getWeight(from, to)
+		sol.cost += graph.GetEdge(from, to).weight
 	}
 
 	return sol
