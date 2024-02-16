@@ -7,52 +7,44 @@ import (
 )
 
 type Graph struct {
-	nodes map[int][]Edge // neighbor list, to save space
+	nodes map[int][]EdgeTo // neighbor list, to save space
 
 	// example: {3: {{7,5},{9,12}}, 7: {{3,5}}, 9: {{3,12}}}
+	// (unless backwards edge is also added)
 }
 
-type Edge struct {
-	from   int
+// NOTE: directed edge
+type EdgeTo struct {
 	to     int
 	weight int
 }
 
 func NewGraph() Graph {
-	return Graph{make(map[int][]Edge)}
+	return Graph{make(map[int][]EdgeTo)}
 }
 
 func (g *Graph) AddEdge(from, to, weight int) {
 
-	e := Edge{from, to, weight}
+	e := EdgeTo{to, weight}
 
-	if g.GetEdge(e.from, e.to) != nil {
-		return // already exists, hence also in g.nodes[e.to]
+	if g.GetEdge(from, to) != nil {
+		return
 	}
-
-	g.nodes[e.from] = append(g.nodes[e.from], e)
-	g.nodes[e.to] = append(g.nodes[e.to], e)
+	g.nodes[from] = append(g.nodes[from], e)
 }
 
-func (g *Graph) RemoveEdge(e Edge) {
+func (g *Graph) RemoveEdge(from, to int) {
 
-	for i, edge := range g.nodes[e.from] {
-		if edge.to == e.to {
-			g.nodes[e.from] = append(g.nodes[e.from][:i], g.nodes[e.from][i+1:]...)
-			break
-		}
-	}
-
-	for i, edge := range g.nodes[e.to] {
-		if edge.from == e.from {
-			g.nodes[e.to] = append(g.nodes[e.to][:i], g.nodes[e.to][i+1:]...)
+	for i, edge := range g.GetNeighborEdges(from) {
+		if edge.to == to {
+			g.nodes[from] = append(g.nodes[from][:i], g.nodes[from][i+1:]...)
 			break
 		}
 	}
 }
 
 // returns pointer, not copy
-func (g *Graph) GetEdge(from, to int) *Edge {
+func (g *Graph) GetEdge(from, to int) *EdgeTo {
 
 	for _, edge := range g.nodes[from] {
 		if edge.to == to {
@@ -62,65 +54,41 @@ func (g *Graph) GetEdge(from, to int) *Edge {
 	return nil
 }
 
-func (g *Graph) getNeighbors(from int) []Edge {
-	return g.nodes[from]
+func (g *Graph) GetNeighborEdges(node int) []EdgeTo {
+	return g.nodes[node]
 }
 
-func (g *Graph) getEdges() []Edge {
+func (g *Graph) GetNodes() []int {
 
-	nonEmpty := map[Edge]struct{}{} // represents a set
+	nodes := Set{}
 
-	for from := 0; from < len(g.nodes); from++ {
-		for _, edge := range g.nodes[from] {
-			nonEmpty[edge] = struct{}{}
+	for node, edges := range g.nodes {
+		nodes.Add(node)
+
+		for _, edge := range edges {
+			nodes.Add(edge.to)
 		}
 	}
 
-	keys := make([]Edge, 0, len(nonEmpty))
-	for k := range nonEmpty {
-		keys = append(keys, k)
+	// convert to []int to prevent confusion when looping with "range"
+	slice := []int{}
+
+	for node := range nodes {
+		slice = append(slice, node)
 	}
-
-	return keys
-}
-
-func (g *Graph) getNonEmptyNodes() []int {
-
-	nonEmptyNodes := map[int]struct{}{}
-
-	for _, edge := range g.getEdges() {
-		nonEmptyNodes[edge.from] = struct{}{}
-	}
-
-	keys := make([]int, 0, len(nonEmptyNodes))
-	for k := range nonEmptyNodes {
-		keys = append(keys, k)
-	}
-
-	return keys
-
+	return slice
 }
 
 func (g Graph) String() string {
 
-	edges := g.getEdges()
-
-	// sort based on `from`, then based on `to`
-	less := func(i, j int) bool {
-		if edges[i].from != edges[j].from {
-			return edges[i].from < edges[j].from
-		}
-		return edges[i].to < edges[j].to
-	}
-
-	sort.Slice(edges, less)
-
 	str := ""
 
-	for _, edge := range edges {
-		str += fmt.Sprintf("%2d - %2d: weighs %v\n", edge.from, edge.to, edge.weight)
-	}
+	nodes := g.GetNodes()
+	sort.Ints(nodes)
 
+	for _, node := range nodes {
+		str += fmt.Sprintf("%v: %v\n", node, g.GetNeighborEdges(node))
+	}
 	str = strings.TrimSuffix(str, "\n")
 
 	return str
@@ -131,7 +99,7 @@ func (g *Graph) GenerateSubgraph(nodes []int) Graph {
 
 	// TEMP: convert neighbor list implementation to adjacency matrix
 
-	numNodes := len(g.getNonEmptyNodes())
+	numNodes := len(g.GetNodes())
 
 	matrix := make([][]int, numNodes)
 
@@ -139,13 +107,13 @@ func (g *Graph) GenerateSubgraph(nodes []int) Graph {
 		matrix[i] = make([]int, numNodes)
 	}
 
-	for _, neighbors := range g.nodes {
+	for node, neighbors := range g.nodes {
 		for _, edge := range neighbors {
-			if edge.from < numNodes && edge.to < numNodes {
+			if node < numNodes && edge.to < numNodes {
 
 				fmt.Println(edge)
-				matrix[edge.from][edge.to] = edge.weight
-				matrix[edge.to][edge.from] = edge.weight
+				matrix[node][edge.to] = edge.weight
+				matrix[edge.to][node] = edge.weight
 			}
 		}
 	}

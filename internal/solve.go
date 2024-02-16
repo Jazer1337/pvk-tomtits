@@ -10,7 +10,7 @@ type Solution struct {
 // NOTE: assumes complete graph
 func solveRandom(graph *Graph, startNode int) Solution {
 
-	nodesLeft := graph.getNonEmptyNodes()
+	nodesLeft := graph.GetNodes()
 
 	// randomize array
 	for i := range nodesLeft {
