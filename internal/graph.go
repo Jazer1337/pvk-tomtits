@@ -93,36 +93,3 @@ func (g Graph) String() string {
 
 	return str
 }
-
-func (g *Graph) GenerateSubgraph(nodes []int) Graph {
-	subGraph := NewGraph()
-
-	// TEMP: convert neighbor list implementation to adjacency matrix
-
-	numNodes := len(g.GetNodes())
-
-	matrix := make([][]int, numNodes)
-
-	for i := range numNodes {
-		matrix[i] = make([]int, numNodes)
-	}
-
-	for node, neighbors := range g.nodes {
-		for _, edge := range neighbors {
-			if node < numNodes && edge.to < numNodes {
-
-				fmt.Println(edge)
-				matrix[node][edge.to] = edge.weight
-				matrix[edge.to][node] = edge.weight
-			}
-		}
-	}
-
-	// TODO: broken with introduction of edges
-	for i := range nodes {
-		for j := i + 1; j < len(nodes); j++ {
-			subGraph.AddEdge(i, j, FindShortestPath(i, j, matrix))
-		}
-	}
-	return subGraph
-}
