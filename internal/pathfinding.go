@@ -22,7 +22,7 @@ func (g *Graph) FindShortestPathAll(nodes []int) Path {
 	for _, node := range nodes[1:] {
 
 		// unnecessary to visit node again if already visited
-		if slices.Contains(pathCombined.Nodes, node) {
+		if slices.Contains(pathCombined.Nodes, node) && node != nodes[len(nodes)-1] {
 			continue
 		}
 
