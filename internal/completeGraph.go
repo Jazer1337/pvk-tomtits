@@ -5,42 +5,40 @@ import (
 	"math/rand"
 )
 
-var matrix [][]float64
-var graph []Node
-
 type Node struct {
-	x float64
-	y float64
+	x int
+	y int
 }
 
-func GenerateMatrix(amountOfNodes int) [][]float64 {
+var nodes []Node
+var matrix Graph
+
+func GenerateMatrix(amountOfNodes int) Graph {
 	nodes := make([]Node, amountOfNodes)
 	for i := 0; i < amountOfNodes; i++ {
-		nodes[i].x = rand.Float64() * 100
-		nodes[i].y = rand.Float64() * 100
+		nodes[i].x = rand.Intn(1000)
+		nodes[i].y = rand.Intn(1000)
 	}
-	graph = nodes
 
-	matrix = make([][]float64, amountOfNodes)
-	for i := range matrix {
-		matrix[i] = make([]float64, amountOfNodes)
-	}
+	var graph Graph
+
 	for i, node := range nodes {
 		for j, target := range nodes {
-			matrix[i][j] = distance(node, target)
+			graph.AddEdge(i, j, int(distance(node, target)))
 		}
 	}
-	return matrix
-}
 
-func GetGraph() []Node {
 	return graph
 }
 
-func GetMatrix() [][]float64 {
+func GetNodes() []Node {
+	return nodes
+}
+
+func GetMatrix() Graph {
 	return matrix
 }
 
 func distance(a Node, b Node) float64 {
-	return math.Sqrt(math.Pow(a.x-b.x, 2) + math.Pow(a.y-b.y, 2))
+	return math.Sqrt(float64(a.x - b.x*a.x - b.x + a.y - b.y*a.y - b.y))
 }
