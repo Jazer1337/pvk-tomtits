@@ -18,10 +18,10 @@
         // Left click
         cell.addEventListener('click', function(event) {
             if (!cell.classList.contains('traversed')) {
-                cell.classList.add('traversed');             // Add the 'traversed' class
-                pathDistance++;                              // Increment pathDistance
+                cell.classList.add('traversed');         
+                pathDistance++;                          
                 if (cell.classList.contains('node')) {
-                    nodesTraversed++;                        // Increment nodesTraversed
+                    nodesTraversed++;                       
                 }
             }
             winLogic();
@@ -30,19 +30,19 @@
         // Right click
         cell.addEventListener('contextmenu', function(event) {
             if (cell.classList.contains('traversed')) {
-                cell.classList.remove('traversed');          // Remove the 'traversed' class
-                pathDistance--;                              // Increment pathDistance
+                cell.classList.remove('traversed');         
+                pathDistance--;                              
                 if (cell.classList.contains('node')) {
-                    nodesTraversed--;                        // Increment nodesTraversed
+                    nodesTraversed--;                        
                 }
             }
         });
     }
 
     function winLogic() {
-        console.log('winLogic function called.'); // Log to check if winLogic is being called
+        console.log('winLogic function called.');
         if (nodesTraversed >= numberOfNodes) {
-            console.log('nodesTraversed >= numberOfNodes passed'); // Log to check if winLogic is being called
+            console.log('nodesTraversed >= numberOfNodes passed');
             const result = window.confirm(`Congratulations! You have traversed all nodes. Path distance: ${pathDistance}. Do you want to play again?`);
             if (result) {
                 resetGame();
@@ -69,7 +69,7 @@
         const tableElement = document.createElement('table');
 
         tableElement.addEventListener('contextmenu', function(event) {
-            event.preventDefault(); // Prevent default right-click pop-up
+            event.preventDefault();
         });
 
         for (let i = 0; i < table.length; i++) {
