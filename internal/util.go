@@ -8,41 +8,22 @@ import (
 )
 
 //
-// --- No native type Set exists... ---
-//
-
-type Set map[int]struct{}
-
-func (s *Set) Add(element int) {
-	(*s)[element] = struct{}{}
-}
-
-func (s *Set) Remove(element int) {
-	delete(*s, element)
-}
-
-func (s *Set) Contains(element int) bool {
-	_, exists := (*s)[element]
-	return exists
-}
-
-//
 // --- Read map from json ---
 //
 
-func ReadJSON(fname string) [][2]int {
+func JSONToGraph(fname string) (graph Graph) {
 
 	file, err := os.Open(fname)
 	if err != nil {
 		fmt.Printf("Error opening \"%s\": %s\n", fname, err)
-		return nil
+		return
 	}
 	defer file.Close()
 
 	content, err := io.ReadAll(file)
 	if err != nil {
 		fmt.Printf("Error reading \"%s\": %s\n", fname, err)
-		return nil
+		return
 	}
 
 	type Tile struct {
@@ -69,7 +50,7 @@ func ReadJSON(fname string) [][2]int {
 
 	if err != nil {
 		fmt.Printf("Error decoding json file \"%s\": %s\n", fname, err)
-		return nil
+		return
 	}
 
 	// create matrix where 1 means road, 0 means not road
@@ -88,10 +69,10 @@ func ReadJSON(fname string) [][2]int {
 		}
 	}
 
-	return mapMatrixToNodes(matrix)
+	return nodesToGraph(mapMatrixToNodes(matrix))
 }
 
-// extract conjunctions from `mapMatrix` (convert to array of nodes)
+// extract conjunctions from `mapMatrix` (convert to graph)
 func mapMatrixToNodes(mapMatrix [][]int) [][2]int {
 
 	h := len(mapMatrix)
@@ -130,5 +111,45 @@ func mapMatrixToNodes(mapMatrix [][]int) [][2]int {
 			}
 		}
 	}
+
 	return nodes
+}
+
+func nodesToGraph(nodes [][2]int) Graph {
+
+	graph := NewGraph()
+
+	for i := range nodes {
+		closestX := -1
+		closestY := -1
+
+		x := nodes[i][0]
+		y := nodes[i][1]
+
+		for j := i + 1; j < len(nodes); j++ {
+			if nodes[j][1] == y {
+				if closestX == -1 || nodes[j][0] < closestX {
+					closestX = nodes[j][0]
+				}
+			} else if nodes[j][0] == x {
+				if closestY == -1 || nodes[j][1] < closestY {
+					closestY = nodes[j][1]
+				}
+			}
+		}
+
+		node1 := Node{nodes[i][0], nodes[i][1]}
+
+		if closestY != -1 {
+			node2 := Node{node1.x, closestY}
+			graph.AddEdge(node1, node2, 5)
+		}
+
+		if closestX != -1 {
+			node2 := Node{closestX, node1.y}
+			graph.AddEdge(node1, node2, 5)
+		}
+	}
+
+	return graph
 }
