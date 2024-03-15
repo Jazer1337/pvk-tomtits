@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
+	"math/rand"
 	"os"
 )
 
@@ -141,13 +143,35 @@ func nodesToGraph(nodes [][2]int) Graph {
 		node1 := Node{nodes[i][0], nodes[i][1]}
 
 		if closestY != -1 {
-			node2 := Node{node1.x, closestY}
+			node2 := Node{node1.X, closestY}
 			graph.AddEdge(node1, node2, 5)
 		}
 
 		if closestX != -1 {
-			node2 := Node{closestX, node1.y}
+			node2 := Node{closestX, node1.Y}
 			graph.AddEdge(node1, node2, 5)
+		}
+	}
+
+	return graph
+}
+
+func GenerateCompleteGraph(numNodes, maxX, maxY int) Graph {
+	nodes := make([]Node, numNodes)
+	for i := 0; i < numNodes; i++ {
+		nodes[i].X = rand.Intn(maxX + 1)
+		nodes[i].Y = rand.Intn(maxY + 1)
+	}
+
+	graph := NewGraph()
+
+	for i := range nodes {
+		for j := i + 1; j < len(nodes); j++ {
+			dx := nodes[j].X - nodes[i].X
+			dy := nodes[j].Y - nodes[i].Y
+			dist := math.Sqrt(float64(dx*dx + dy*dy))
+
+			graph.AddEdge(nodes[i], nodes[j], int(dist))
 		}
 	}
 

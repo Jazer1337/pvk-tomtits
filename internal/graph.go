@@ -11,12 +11,12 @@ type Graph struct {
 }
 
 type Node struct {
-	x int
-	y int
+	X int
+	Y int
 }
 
 func (n Node) String() string {
-	return fmt.Sprintf("Node{%v,%v}", n.x, n.y)
+	return fmt.Sprintf("Node{%v,%v}", n.X, n.Y)
 }
 
 type Edge struct {
@@ -62,7 +62,7 @@ func (g *Graph) RemoveEdge(node1, node2 Node) {
 func (g *Graph) GetEdge(node1, node2 Node) *Edge {
 
 	for _, edge := range g.nodes[node1] {
-		if edge.node2 == node2 {
+		if edge.node1 == node2 || edge.node2 == node2 {
 			return &edge
 		}
 	}
@@ -92,10 +92,10 @@ func (g Graph) String() string {
 	nodes := g.GetNodes()
 
 	sort.Slice(nodes, func(i, j int) bool {
-		if nodes[i].x != nodes[j].x {
-			return nodes[i].x < nodes[j].x
+		if nodes[i].X != nodes[j].X {
+			return nodes[i].X < nodes[j].X
 		}
-		return nodes[i].y < nodes[j].y
+		return nodes[i].Y < nodes[j].Y
 	})
 
 	for _, node := range nodes {
