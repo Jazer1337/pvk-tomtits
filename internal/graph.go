@@ -7,76 +7,82 @@ import (
 )
 
 type Graph struct {
-	nodes map[int][]EdgeTo // neighbor list, to save space
-
-	// example: {3: {{7,5},{9,12}}, 7: {{3,5}}, 9: {{3,12}}}
-	// (unless backwards edge is also added)
+	nodes map[Node][]Edge // neighbor list, to save space and quickly find neighbors
 }
 
-// NOTE: directed edge
-type EdgeTo struct {
-	to     int
+type Node struct {
+	x int
+	y int
+}
+
+func (n Node) String() string {
+	return fmt.Sprintf("Node{%v,%v}", n.x, n.y)
+}
+
+type Edge struct {
+	node1  Node
+	node2  Node
 	weight int
 }
 
 func NewGraph() Graph {
-	return Graph{make(map[int][]EdgeTo)}
+	return Graph{make(map[Node][]Edge)}
 }
 
-func (g *Graph) AddEdge(from, to, weight int) {
+func (g *Graph) AddEdge(node1, node2 Node, weight int) {
 
-	e := EdgeTo{to, weight}
+	e := Edge{node1, node2, weight}
 
-	if g.GetEdge(from, to) != nil {
-		return
+	if g.GetEdge(node1, node2) != nil {
+		return // edge already exists
 	}
-	g.nodes[from] = append(g.nodes[from], e)
+	g.nodes[node1] = append(g.nodes[node1], e)
+	g.nodes[node2] = append(g.nodes[node2], e)
+
 }
 
-func (g *Graph) RemoveEdge(from, to int) {
+func (g *Graph) RemoveEdge(node1, node2 Node) {
 
-	for i, edge := range g.GetNeighborEdges(from) {
-		if edge.to == to {
-			g.nodes[from] = append(g.nodes[from][:i], g.nodes[from][i+1:]...)
+	for i, edge := range g.GetNeighborEdges(node1) {
+		if edge.node2 == node2 {
+			g.nodes[node1] = append(g.nodes[node1][:i], g.nodes[node1][i+1:]...)
+			break
+		}
+	}
+
+	for i, edge := range g.GetNeighborEdges(node2) {
+		if edge.node1 == node1 {
+			g.nodes[node2] = append(g.nodes[node2][:i], g.nodes[node2][i+1:]...)
 			break
 		}
 	}
 }
 
 // returns pointer, not copy
-func (g *Graph) GetEdge(from, to int) *EdgeTo {
+func (g *Graph) GetEdge(node1, node2 Node) *Edge {
 
-	for _, edge := range g.nodes[from] {
-		if edge.to == to {
+	for _, edge := range g.nodes[node1] {
+		if edge.node2 == node2 {
 			return &edge
 		}
 	}
 	return nil
 }
 
-func (g *Graph) GetNeighborEdges(node int) []EdgeTo {
+func (g *Graph) GetNeighborEdges(node Node) []Edge {
 	return g.nodes[node]
 }
 
-func (g *Graph) GetNodes() []int {
+func (g *Graph) GetNodes() []Node {
 
-	nodes := Set{}
-
-	for node, edges := range g.nodes {
-		nodes.Add(node)
-
-		for _, edge := range edges {
-			nodes.Add(edge.to)
-		}
+	nodesOnly := make([]Node, len(g.nodes))
+	i := 0
+	for node := range g.nodes {
+		nodesOnly[i] = node
+		i++
 	}
 
-	// convert to []int to prevent confusion when looping with "range"
-	slice := []int{}
-
-	for node := range nodes {
-		slice = append(slice, node)
-	}
-	return slice
+	return nodesOnly
 }
 
 func (g Graph) String() string {
@@ -84,10 +90,25 @@ func (g Graph) String() string {
 	str := ""
 
 	nodes := g.GetNodes()
-	sort.Ints(nodes)
+
+	sort.Slice(nodes, func(i, j int) bool {
+		if nodes[i].x != nodes[j].x {
+			return nodes[i].x < nodes[j].x
+		}
+		return nodes[i].y < nodes[j].y
+	})
 
 	for _, node := range nodes {
-		str += fmt.Sprintf("%v: %v\n", node, g.GetNeighborEdges(node))
+		str += fmt.Sprintf("%v: ", node)
+
+		for _, edge := range g.GetNeighborEdges(node) {
+			if edge.node1 == node {
+				str += fmt.Sprintf("Edge{%v,w=%v}, ", edge.node2, edge.weight)
+			} else {
+				str += fmt.Sprintf("Edge{%v,w=%v}, ", edge.node1, edge.weight)
+			}
+		}
+		str += "\n"
 	}
 	str = strings.TrimSuffix(str, "\n")
 
