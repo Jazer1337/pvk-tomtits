@@ -20,9 +20,8 @@ func (n Node) String() string {
 }
 
 type Edge struct {
-	node1  Node
-	node2  Node
-	weight int
+	To     Node
+	Weight int
 }
 
 func NewGraph() Graph {
@@ -31,27 +30,27 @@ func NewGraph() Graph {
 
 func (g *Graph) AddEdge(node1, node2 Node, weight int) {
 
-	e := Edge{node1, node2, weight}
+	e1 := Edge{node2, weight}
 
 	if g.GetEdge(node1, node2) != nil {
 		return // edge already exists
 	}
-	g.nodes[node1] = append(g.nodes[node1], e)
-	g.nodes[node2] = append(g.nodes[node2], e)
+	g.nodes[node1] = append(g.nodes[node1], e1)
+	g.nodes[node2] = append(g.nodes[node2], Edge{node1, weight}) // create reverse edge but with same weight
 
 }
 
 func (g *Graph) RemoveEdge(node1, node2 Node) {
 
 	for i, edge := range g.GetNeighborEdges(node1) {
-		if edge.node2 == node2 {
+		if edge.To == node2 {
 			g.nodes[node1] = append(g.nodes[node1][:i], g.nodes[node1][i+1:]...)
 			break
 		}
 	}
 
 	for i, edge := range g.GetNeighborEdges(node2) {
-		if edge.node1 == node1 {
+		if edge.To == node1 {
 			g.nodes[node2] = append(g.nodes[node2][:i], g.nodes[node2][i+1:]...)
 			break
 		}
@@ -62,7 +61,7 @@ func (g *Graph) RemoveEdge(node1, node2 Node) {
 func (g *Graph) GetEdge(node1, node2 Node) *Edge {
 
 	for _, edge := range g.nodes[node1] {
-		if edge.node1 == node2 || edge.node2 == node2 {
+		if edge.To == node2 {
 			return &edge
 		}
 	}
@@ -85,6 +84,10 @@ func (g *Graph) GetNodes() []Node {
 	return nodesOnly
 }
 
+func (g *Graph) GetNumNodes() int {
+	return len(g.nodes)
+}
+
 func (g Graph) String() string {
 
 	str := ""
@@ -102,11 +105,7 @@ func (g Graph) String() string {
 		str += fmt.Sprintf("%v: ", node)
 
 		for _, edge := range g.GetNeighborEdges(node) {
-			if edge.node1 == node {
-				str += fmt.Sprintf("Edge{%v,w=%v}, ", edge.node2, edge.weight)
-			} else {
-				str += fmt.Sprintf("Edge{%v,w=%v}, ", edge.node1, edge.weight)
-			}
+			str += fmt.Sprintf("Edge{%v,w=%v}, ", edge.To, edge.Weight)
 		}
 		str += "\n"
 	}
