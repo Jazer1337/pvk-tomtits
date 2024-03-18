@@ -84,7 +84,8 @@ function renderTable(table) {
     const tableElement = document.createElement('table');
 
     tableElement.addEventListener('contextmenu', function(event) {
-        event.preventDefault(); // Prevent default right-click pop-up
+        // Prevent default right-click pop-up
+        event.preventDefault();
     });
 
     for (let i = 0; i < table.length; i++) {
