@@ -1,0 +1,27 @@
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td {
+    position: relative;
+    border: 1px solid black;
+    width: calc(100% / 16);
+    padding-bottom: calc(100% / 27);
+    text-align: center;
+    cursor: pointer;
+}
+
+td.traversed {
+    /* Change background color for traversed cells */
+    background-color: yellow;
+}
+
+td.node {
+    border: 2px solid red;
+}
