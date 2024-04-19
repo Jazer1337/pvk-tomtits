@@ -9,7 +9,7 @@ class Path {
 /**
  * Include all nodes in `nodes` when finding path.
  * Automatically adds `startNode` as end node.
- * @param {number} startNode 
+ * @param {Node} startNode 
  * @param {Array<number>} unvisited 
  */
 export function FindShortestPathAll(graph, startNode, unvisited) {
@@ -56,7 +56,7 @@ export function FindShortestPathAll(graph, startNode, unvisited) {
  * (pseudo code at: https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm)
  * @returns {Path}
  */
-export function FindShortestPathBetween(graph, startNode, endNode) {
+function FindShortestPathBetween(graph, startNode, endNode) {
 
     // setup
     let distanceTo = new Map();
@@ -74,7 +74,7 @@ export function FindShortestPathBetween(graph, startNode, endNode) {
     while (queue.length > 0) {
 
         // get min dist node
-        let u = -1;
+        let u = null;
         let minDist = Infinity;
 
         for (let [node, dist] of distanceTo.entries()) {

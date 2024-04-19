@@ -1,6 +1,6 @@
 import { Graph, Node } from "./graph.js";
 
-// index 0 means first node with coords nodeCoords[0]
+// nodes are accessed with indexes (nodes[0] gives first node)
 export const nodes = [
     new Node( 0,  85,  60),
     new Node( 1, 200,  60),
