@@ -1,5 +1,3 @@
-import { Graph, Edge } from "./graph.js";
-
 
 class Path {
     constructor() {
@@ -12,29 +10,44 @@ class Path {
  * Include all nodes in `nodes` when finding path.
  * Automatically adds `startNode` as end node.
  * @param {number} startNode 
- * @param {Array<number>} nodes 
+ * @param {Array<number>} unvisited 
  */
-export function FindShortestPathAll(graph, startNode, nodes) {
-    nodes.push(startNode);
+export function FindShortestPathAll(graph, startNode, unvisited) {
 
     let pathCombined = new Path();
     pathCombined.nodes.push(startNode);
 
     let from = startNode;
 
-    for (let node of nodes) {
+    while (unvisited.length > 0) {
+        
+        let lastPath = null;
 
-        // unnecessary to visit node again if already visited through some previous path
-        if (pathCombined.nodes.includes(node) && node != nodes[nodes.length - 1]) {
-            continue;
+        for (let node of unvisited) {
+    
+            let path = FindShortestPathBetween(graph, from, node);
+
+            if (lastPath === null || path.cost < lastPath.cost) {
+                lastPath = path;
+            }
         }
-        let path = FindShortestPathBetween(graph, from, node);
-        from = node;
+
+        from = lastPath.nodes[lastPath.nodes.length-1];
+
+        unvisited = unvisited.filter(unvNode => !lastPath.nodes.includes(unvNode));
 
         // don't append first node (was appended last iteration)
-        pathCombined.nodes.push(...path.nodes.slice(1));
-        pathCombined.cost += path.cost;
+        pathCombined.nodes.push(...lastPath.nodes.slice(1));
+        pathCombined.cost += lastPath.cost;
     }
+
+    // connect back to startNode
+    from = pathCombined.nodes[pathCombined.nodes.length-1];
+    let path = FindShortestPathBetween(graph, from, startNode);
+
+    pathCombined.nodes.push(...path.nodes.slice(1));
+    pathCombined.cost += path.cost;
+
     return pathCombined;
 }
 

@@ -5,11 +5,11 @@ export class Graph {
     }
 
     /**
-     * @param {number} node1 
+     * @param {Object} nodes - Translation table
      * @param {number} node2
      * @param {number} weight 
      */
-    addEdge(node1, node2, weight) {
+    addEdge(nodes, node1, node2) {
         // TODO: prevent duplicate edges
         if (this.edges.get(node1) === undefined) {
             this.edges.set(node1, []);
@@ -18,8 +18,11 @@ export class Graph {
             this.edges.set(node2, []);
         }
 
-        this.edges.get(node1).push(new Edge(node2, weight));
-        this.edges.get(node2).push(new Edge(node1, weight));
+        let dx = nodes[node2][0] - nodes[node1][0];
+        let dy = nodes[node2][1] - nodes[node1][1];
+        let dist = Math.hypot(dx, dy);
+        this.edges.get(node1).push(new Edge(node2, dist));
+        this.edges.get(node2).push(new Edge(node1, dist));
     }
 
     /**
