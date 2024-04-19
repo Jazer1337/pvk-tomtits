@@ -1,13 +1,15 @@
+import { nodes, graph } from "./map.js";
+
 const canvas = document.getElementById('metroCanvas');
 const ctx = canvas.getContext('2d');
-const nodes = [];
+
 var gameOver = false;
-var startNode = null;
+var startNode;
 var currentNode;
 var count = 0;
 var targets = []
-var adjacencyMatrix = []
 var visited = []
+
 
 export function setup() {
     document.getElementById("count").innerHTML = "Hämta sopor i alla blåa noder och ta dig sedan tillbaka till sopstation längst upp till vänster";
@@ -24,14 +26,13 @@ export function setup() {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
         const clickedNode = nodes.find(node => Math.hypot(node.x - x, node.y - y) < 10);
-        
-    
 
-        if (adjacencyMatrix[nodes.indexOf(currentNode)][nodes.indexOf(clickedNode)] == 1){
+        if (graph.getNeighborEdges(currentNode).find(edge => edge.to == clickedNode)) {
+
             count++;
-            drawLine(currentNode.x, currentNode.y, clickedNode.x, clickedNode.y, '#F00');
-            drawNode(currentNode.x, currentNode.y, '#000')
-            drawNode(clickedNode.x, clickedNode.y, '#0F0')
+            drawLine(currentNode, clickedNode, '#F00');
+            drawNode(currentNode, '#000')
+            drawNode(clickedNode, '#0F0')
             currentNode = clickedNode
             
             visited[nodes.indexOf(clickedNode)] = true;
@@ -50,25 +51,19 @@ export function setup() {
     });
 }
 
-
-function makeNode(x, y){
-    drawNode(x, y, '#000')
-    nodes.push({x, y})
-}
-
-function drawNode(x, y, color) {
+function drawNode(node, color) {
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(x, y, 10, 0, Math.PI * 2);
+    ctx.arc(node.x, node.y, 10, 0, Math.PI * 2);
     ctx.fill();
 }
 
-function drawLine(x1, y1, x2, y2, color) {
+function drawLine(node1, node2, color) {
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
+    ctx.moveTo(node1.x, node1.y);
+    ctx.lineTo(node2.x, node2.y);
     ctx.stroke();
 }
 
@@ -77,7 +72,7 @@ function generateGarbage(amount){
         
         const randomIndex = Math.floor(Math.random() * (nodes.length - 1) + 1)
         targets.push(randomIndex);
-        drawNode(nodes[randomIndex].x, nodes[randomIndex].y, '#00F')
+        drawNode(nodes[randomIndex], '#00F')
 
     }
 }
@@ -93,43 +88,22 @@ function garbageCollected() {
 }
 
 function generateMap() {
-    makeNode(100, 100)
-    makeNode(200, 100)
-    makeNode(300, 100)
-    makeNode(200, 300)
-    makeNode(100, 300)
-    makeNode(150, 100)
-    makeNode(100, 200)
-    makeNode(150, 200)
-
-    startNode = nodes[0]
+    for (let node of nodes) {
+        drawNode(node, '#000');
+    }
+    startNode = nodes[0];
     visited = new Array(nodes.length)
-
-
-    adjacencyMatrix = [
-        [0, 0, 0, 0, 0, 1, 1 ,0],
-        [0, 0, 1, 1, 0, 1, 0 ,0],
-        [0, 1, 0, 0, 0, 0, 0 ,0],
-        [0, 1, 0, 0, 1, 0, 0 ,0],
-        [0, 0, 0, 1, 0, 0, 1 ,0],
-        [1, 1, 0, 0, 0, 0, 0 ,0],
-        [1, 0, 0, 0, 1, 0, 0 ,1],
-        [0, 0, 0, 0, 0, 0, 1 ,0],
-      ];
-
 }
 
 function initialDraw() {
-    for (let i = 0; i < adjacencyMatrix.length; i++) {
-        for (let u = i; u < adjacencyMatrix.length; u++) {
-            if (adjacencyMatrix[i][u] == 1) {
-                drawLine(nodes[i].x, nodes[i].y, nodes[u].x, nodes[u].y, '#000')
-            }
-        } 
+
+    for (let u of graph.getNodes()) {
+        for (let edge of graph.getNeighborEdges(u)) {
+            drawLine(u, edge.to, '#000');
+        }
     }
 
-
-    drawNode(startNode.x, startNode.y, '#0F0')
+    drawNode(startNode, '#0F0')
     currentNode = startNode;
 
     for (let i = 0; i < visited.length; i++) {

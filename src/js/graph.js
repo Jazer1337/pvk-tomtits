@@ -1,15 +1,39 @@
+
+export class Node {
+    /**
+     * @param {number} name 
+     * @param {number} x 
+     * @param {number} y 
+     */
+    constructor(name, x, y) {
+        this.name = name;
+        this.x = x;
+        this.y = y;
+    }
+}
+
+class Edge {
+    /**
+     * @param {Node} to 
+     * @param {number} weight 
+    */
+    constructor(to, weight) {
+        this.to = to;
+        this.weight = weight;
+    }
+}
+
 export class Graph {
     constructor() {
-        /** @type {Map<number, Array<Edge>>} */
+        /** @type {Map<Node, Array<Edge>>} */
         this.edges = new Map();
     }
 
     /**
-     * @param {Object} nodes - Translation table
-     * @param {number} node2
-     * @param {number} weight 
+     * @param {Node} node1
+     * @param {Node} node2
      */
-    addEdge(nodes, node1, node2) {
+    addEdge(node1, node2) {
         // TODO: prevent duplicate edges
         if (this.edges.get(node1) === undefined) {
             this.edges.set(node1, []);
@@ -18,9 +42,7 @@ export class Graph {
             this.edges.set(node2, []);
         }
 
-        let dx = nodes[node2][0] - nodes[node1][0];
-        let dy = nodes[node2][1] - nodes[node1][1];
-        let dist = Math.hypot(dx, dy);
+        let dist = Math.hypot(node2.x-node1.x, node2.y - node1.y);
         this.edges.get(node1).push(new Edge(node2, dist));
         this.edges.get(node2).push(new Edge(node1, dist));
     }
@@ -54,16 +76,3 @@ export class Graph {
         return this.edges.get(node);
     }
 }
-
-export class Edge {
-    /**
-     * 
-     * @param {number} to 
-     * @param {number} weight 
-    */
-    constructor(to, weight) {
-        this.to = to;
-        this.weight = weight;
-    }
-}
-
