@@ -1,0 +1,14 @@
+whooop {
+    display: flex;
+    justify-content: center;
+    margin-top: 50px;
+}
+
+canvas {
+    border: 1px solid black;
+}
+
+p {
+    display: flex;
+    justify-content: center;
+}
