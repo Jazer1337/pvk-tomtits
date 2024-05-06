@@ -1,6 +1,6 @@
 import { nodes, graph } from "./map.js";
 
-const canvas = document.getElementById('metroCanvas');
+const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
 var gameOver = false;
@@ -9,6 +9,13 @@ var currentNode;
 var count = 0;
 var targets = []
 var visited = []
+
+// set **internal** size for canvas. Can be set in the element in html (or here in js) but not in css.
+const dispWidth = 1920;
+const dispHeight = 1080;
+
+canvas.width = dispWidth;
+canvas.height = dispHeight;
 
 
 export function setup() {
@@ -25,7 +32,7 @@ export function setup() {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        const clickedNode = nodes.find(node => Math.hypot(node.x - x, node.y - y) < 10);
+        const clickedNode = nodes.find(node => Math.hypot(node.x*dispWidth - x, node.y*dispHeight - y) < 10);
 
         if (graph.getNeighborEdges(currentNode).find(edge => edge.to == clickedNode)) {
 
@@ -54,7 +61,7 @@ export function setup() {
 function drawNode(node, color) {
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(node.x, node.y, 10, 0, Math.PI * 2);
+    ctx.arc(node.x*dispWidth, node.y*dispHeight, 10, 0, Math.PI * 2);
     ctx.fill();
 }
 
@@ -62,8 +69,8 @@ function drawLine(node1, node2, color) {
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(node1.x, node1.y);
-    ctx.lineTo(node2.x, node2.y);
+    ctx.moveTo(node1.x*dispWidth, node1.y*dispHeight);
+    ctx.lineTo(node2.x*dispWidth, node2.y*dispHeight);
     ctx.stroke();
 }
 
@@ -89,19 +96,13 @@ function garbageCollected() {
 
 function generateMap() {
     for (let node of nodes) {
-        drawNode(node, '#000');
+        drawNode(node, '#0003');
     }
     startNode = nodes[0];
     visited = new Array(nodes.length)
 }
 
 function initialDraw() {
-
-    for (let u of graph.getNodes()) {
-        for (let edge of graph.getNeighborEdges(u)) {
-            drawLine(u, edge.to, '#000');
-        }
-    }
 
     drawNode(startNode, '#0F0')
     currentNode = startNode;

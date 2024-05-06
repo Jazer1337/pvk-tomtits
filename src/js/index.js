@@ -1,5 +1,3 @@
-import '../css/style.css'
-
 import { setup } from "./metro.js";
 import { nodes, graph } from "./map.js";
 import { FindShortestPathAll } from "./solve.js";
