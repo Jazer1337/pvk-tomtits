@@ -46,9 +46,9 @@ export function setup() {
 
             if (currentNode == startNode && garbageCollected()){
                 gameOver = true;
-                document.getElementById("count").innerHTML = "Du kom tillbaka på " + count + " steg! Med alla sopor 😱"
+                document.getElementById("count").innerHTML = "Du kom tillbaka på " + count + " meter! Med alla sopor 😱"
             } else {
-                document.getElementById("count").innerHTML = "Du har åkt " + count + " steg"
+                document.getElementById("count").innerHTML = "Du har åkt " + count + " meter"
             }
         }
         
