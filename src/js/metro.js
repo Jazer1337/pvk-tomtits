@@ -36,7 +36,7 @@ export function setup() {
 
         if (graph.getNeighborEdges(currentNode).find(edge => edge.to == clickedNode)) {
 
-            count++;
+            count += graph.getWeight(currentNode, clickedNode);
             drawLine(currentNode, clickedNode, '#F00');
             drawNode(currentNode, '#000')
             drawNode(clickedNode, '#0F0')
