@@ -1,5 +1,5 @@
 import { Resolution } from "./resolution.js";
-import { setup } from "./metro.js";
+import { Game } from "./metro.js";
 import { GameMap } from "./map.js";
 // import { FindShortestPathAll } from "./solve.js";
 
@@ -7,7 +7,7 @@ import { GameMap } from "./map.js";
 Resolution.setup();     // resolution must be set up first
 GameMap.setup();
 
-document.addEventListener('DOMContentLoaded', setup);
+document.addEventListener('DOMContentLoaded', Game.setup);
 
 // --- TESTING ALGORITHM ---
 // let start = nodes[0];
