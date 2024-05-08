@@ -10,80 +10,74 @@ export class Game {
     static rect;
 
     static truck;
-    static truckWidth;
-    static truckHeight;
 
     static gameOver = false;
     static startNode;
     static currentNode;
     static count = 0;
-    static targets = [];        // [[idx, img], [idx, img], ...]
-    static visited = [];
+    static targets = [];        // list of [node, img]
+    static visited = [];        // list of node indices
 
     static setup() {
         
         Game.rect = Game.canvas.getBoundingClientRect();
 
         Game.truck = Game.createImg("./src/css/garbage_truck.svg", 150);
-        
-
-        // save computed style for truck
-        const compStyle = window.getComputedStyle(Game.truck);
-        Game.truckWidth = parseInt(compStyle.width);
-        Game.truckHeight = parseInt(compStyle.height);
-        
-        Game.moveTruck(GameMap.nodes[0].x, GameMap.nodes[0].y);
-
-
+        Game.truck.style.zIndex = 1;                                        // show on top of trash cans
+        Game.moveTruck(GameMap.nodes[0]);
 
         document.getElementById("count").innerHTML = "Hämta sopor i alla blåa noder och ta dig sedan tillbaka till sopstation längst upp till vänster";
         
-        Game.generateMap()
-        Game.initialDraw()
-        Game.generateGarbage(3)
+        // init game
+        Game.generateMap();
+        Game.initialDraw();
+        Game.generateGarbage(3);
 
-        Game.canvas.addEventListener('click', function(e) {
+        Game.canvas.addEventListener('click', event => {
 
             if (Game.gameOver) {
-                return
+                return;
             }
-            const x = e.clientX - Game.rect.left;
-            const y = e.clientY - Game.rect.top;
-            const clickedNode = GameMap.nodes.find(node => Math.hypot(node.x - x, node.y - y) < 7 * Resolution.circleRadius);       // touch-area is larger than visuals
+            
+            const radius = 7 * Resolution.circleRadius;     // not necessary to press exactly on the circle (outside is ok)
+            
+            const x = event.clientX - Game.rect.left;
+            const y = event.clientY - Game.rect.top;
+            const clickedNode = GameMap.nodes.find(node => Math.hypot(node.x-x, node.y-y) < radius);
 
+            // if neighbor
             if (GameMap.graph.getNeighborEdges(Game.currentNode).find(edge => edge.to == clickedNode)) {
 
+                // visit node
                 Game.count += GameMap.graph.getWeight(Game.currentNode, clickedNode) * Resolution.SCALE;
                 Game.drawLine(Game.currentNode, clickedNode, '#F00');
+                Game.currentNode = clickedNode;
 
-                Game.moveTruck(clickedNode.x, clickedNode.y);
+                Game.moveTruck(clickedNode);
 
-                Game.currentNode = clickedNode
+                // empty trash can if first time visiting
+                let wasVisitedBefore = Game.visited[clickedNode.name];
+                Game.visited[clickedNode.name] = true;
                 
-                const i = GameMap.nodes.indexOf(clickedNode);
-                let wasVisitedBefore = Game.visited[i];
-                Game.visited[i] = true;
-                
-                if (!wasVisitedBefore && Game.visited[i]) {
-                    
+                if (!wasVisitedBefore && Game.visited[clickedNode.name]) {
                     for (const [node, img] of Game.targets) {
-                        if (node == clickedNode.name) {
-                            // trash was just visited: change img to empty trash can
+                        if (node == clickedNode) {
                             img.src = "./src/css/trash_empty.svg";
                             break;
                         }
                     }
                 }
 
-                if (Game.currentNode == Game.startNode && Game.garbageCollected()){
-                    Game.gameOver = true;
-                    document.getElementById("count").innerHTML = "Du kom tillbaka på " + parseInt(Game.count) + " meter! Med alla sopor 😱"
-                } else {
-                    document.getElementById("count").innerHTML = "Du har åkt " + parseInt(Game.count) + " meter"
-                }
-            }           
+                // update info
+                let str = "Du har åkt " + parseInt(Game.count) + " meter";
 
-            console.log(Game.count);
+                if (Game.currentNode == Game.startNode && Game.isGarbageCollected()){
+                    Game.gameOver = true;
+                    str = "Du kom tillbaka på " + parseInt(Game.count) + " meter! Med alla sopor 😱";
+                }
+
+                document.getElementById("count").innerHTML = str;
+            }           
 
         });
     }
@@ -103,9 +97,10 @@ export class Game {
         return img;
     }
 
-    static moveTruck(x, y) {
-        Game.truck.style.left = Game.rect.left + x - Game.truckWidth/2 + "px";
-        Game.truck.style.top = Game.rect.top + y - Game.truckHeight/2 + "px";
+    // centers truck on (x,y)
+    static moveTruck(node) {
+        Game.truck.style.left = Game.rect.left + node.x - parseInt(Game.truck.style.width)/2 + "px";
+        Game.truck.style.top = Game.rect.top + node.y - parseInt(Game.truck.style.height)/2 + "px";
     }
 
     static drawNode(node, color) {
@@ -126,35 +121,32 @@ export class Game {
 
     static generateGarbage(amount) {
         
+        let nodesLeft = [...GameMap.nodes];
 
-        for (let i = 0; i < amount; i++) {
+        for (let i=0; i<amount; i++) {
             
-            // TODO: prevent duplicate trash
-            const randomIndex = Math.floor(Math.random() * (GameMap.nodes.length - 1) + 1)
-            
+            // pick random trash
+            const randIdx = Math.floor(Math.random() * (nodesLeft.length - 1) + 1);
+            const node = nodesLeft.splice(randIdx, 1)[0];
+
+            // create img
             const img = Game.createImg("./src/css/trash_full.svg", 100);
+            img.style.left = Game.rect.left + node.x - parseInt(img.style.width)/2 + "px";
+            img.style.top = Game.rect.top + node.y - parseInt(img.style.height)/2 + "px";
 
-            const x = GameMap.nodes[randomIndex].x;
-            const y = GameMap.nodes[randomIndex].y;
-
-            img.style.left = Game.rect.left + x - parseInt(img.style.width)/2 + "px";
-            img.style.top = Game.rect.top + y - parseInt(img.style.height)/2 + "px";
-
-            Game.targets.push([randomIndex, img]);
-
-            Game.drawNode(GameMap.nodes[randomIndex], "#0003");
-
+            Game.targets.push([node, img]);
         }
     }
 
-    static garbageCollected() {
-        for (let i = 0; i < Game.targets.length; i++) {
-            if (Game.visited[Game.targets[i][0]] == false){
-                return false
+    static isGarbageCollected() {
+        for (const [node, _] of Game.targets) {
+            if (!Game.visited[node.name]) {
+                console.log(node);
+                console.log("not visited");
+                return false;
             }
         }
-        return true
-        
+        return true;
     }
 
     static generateMap() {

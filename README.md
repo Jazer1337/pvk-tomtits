@@ -10,7 +10,7 @@
 
 - `src/js/map.js` defines the whole map, i.e. nodes and edges. May be edited.
 
-- `src/js/metro.js` handles generating the visual frame and event callbacks. May be edited.
+- `src/js/game.js` handles generating the visual frame and event callbacks. May be edited.
 
 - `src/js/graph.js` defines classes `Node`, `Edge`, and `Graph`. No need to edit these. 
 

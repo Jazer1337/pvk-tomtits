@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack",
-    "watch": "onchange '../src/js/metro.js' -- webpack"
+    "watch": "onchange '../src/js/game.js' -- webpack"
   },
   "keywords": [],
   "author": "",
