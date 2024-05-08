@@ -1,9 +1,9 @@
 
 export class Node {
     /**
-     * @param {int} name 
-     * @param {float} x 
-     * @param {float} y 
+     * @param {number} name 
+     * @param {number} x 
+     * @param {number} y 
      */
     constructor(name, x, y) {
         this.name = name;

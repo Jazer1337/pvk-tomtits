@@ -1,23 +1,23 @@
-.canvas-container {
+#canvas-container {
     display: flex;
     justify-content: center;
     margin-top: 50px;
 }
 
-canvas {
+
+canvas {  
     border: 1px solid black;
     background-image: url("map.svg");
     background-size: cover;
-    
-    /*
-    ok to set width here in css, but it doesn't match
-    the internal resolution of the canvas (which is set in js)
-    */
-    /* width: 75%; */
+   
+    /* NOTE: don't set width and height here. Size is set in js */
 }
 
 p {
     display: flex;
     justify-content: center;
-    font-size: 200%;
+}
+
+body {
+    margin: 0;
 }
