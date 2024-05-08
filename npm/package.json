@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack"
+    "build": "webpack",
+    "watch": "onchange '../src/js/metro.js' -- webpack"
   },
   "keywords": [],
   "author": "",
@@ -13,5 +14,8 @@
   "devDependencies": {
     "webpack": "^5.91.0",
     "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "onchange": "^7.1.0"
   }
 }
