@@ -1,5 +1,6 @@
 import { Resolution } from "./resolution.js";
 import { GameMap } from "./map.js";
+import { FindShortestPathAll } from "./solve.js";
 
 
 export class Game {
@@ -13,18 +14,31 @@ export class Game {
 
     static gameOver = false;
     static startNode;
-    static currentNode;
+    static playerCurrentNode;
     static count = 0;
     static targets = [];        // list of [node, img]
-    static visited = [];        // list of node indices
+    static playerVisited = [];        // list of node indices
+
+    static robot;       // img
+    static robotPath;   // Path
+    static robotIdx;    // int
+    static robotUndrawnRoads;       // list of [node1, node2]
+    static robotVisited;        // list of node indices
 
     static setup() {
         
         Game.rect = Game.canvas.getBoundingClientRect();
 
+        // setup truck
         Game.truck = Game.createImg("./src/css/garbage_truck.svg", 150);
         Game.truck.style.zIndex = 1;                                        // show on top of trash cans
-        Game.moveTruck(GameMap.nodes[0]);
+        Game.moveImg(Game.truck, GameMap.nodes[0].x, GameMap.nodes[0].y);
+
+        // setup robot
+        Game.robot = Game.createImg("./src/css/ai_robot.png", 100);
+        Game.robot.style.zIndex = 1;
+        Game.moveImg(Game.robot, GameMap.nodes[0].x, GameMap.nodes[0].y);
+        Game.robot.style.display = "none";
 
         document.getElementById("count").innerHTML = "Hämta sopor i alla blåa noder och ta dig sedan tillbaka till sopstation längst upp till vänster";
         
@@ -46,34 +60,24 @@ export class Game {
             const clickedNode = GameMap.nodes.find(node => Math.hypot(node.x-x, node.y-y) < radius);
 
             // if neighbor
-            if (GameMap.graph.getNeighborEdges(Game.currentNode).find(edge => edge.to == clickedNode)) {
+            if (GameMap.graph.getNeighborEdges(Game.playerCurrentNode).find(edge => edge.to == clickedNode)) {
 
                 // visit node
-                Game.count += GameMap.graph.getWeight(Game.currentNode, clickedNode) * Resolution.SCALE;
-                Game.drawLine(Game.currentNode, clickedNode, '#F00');
-                Game.currentNode = clickedNode;
+                Game.count += GameMap.graph.getWeight(Game.playerCurrentNode, clickedNode) * Resolution.SCALE;
+                Game.drawLine(Game.playerCurrentNode, clickedNode, '#F00');
+                Game.playerCurrentNode = clickedNode;
 
-                Game.moveTruck(clickedNode);
+                Game.moveImg(Game.truck, clickedNode.x, clickedNode.y);
 
-                // empty trash can if first time visiting
-                let wasVisitedBefore = Game.visited[clickedNode.name];
-                Game.visited[clickedNode.name] = true;
-                
-                if (!wasVisitedBefore && Game.visited[clickedNode.name]) {
-                    for (const [node, img] of Game.targets) {
-                        if (node == clickedNode) {
-                            img.src = "./src/css/trash_empty.svg";
-                            break;
-                        }
-                    }
-                }
+                Game.emptyTrash(Game.playerVisited, clickedNode);
 
                 // update info
                 let str = "Du har åkt " + parseInt(Game.count) + " meter";
 
-                if (Game.currentNode == Game.startNode && Game.isGarbageCollected()){
+                if (Game.playerCurrentNode == Game.startNode && Game.isGarbageCollected()){
                     Game.gameOver = true;
                     str = "Du kom tillbaka på " + parseInt(Game.count) + " meter! Med alla sopor 😱";
+                    Game.drawAISolution();
                 }
 
                 document.getElementById("count").innerHTML = str;
@@ -98,9 +102,9 @@ export class Game {
     }
 
     // centers truck on (x,y)
-    static moveTruck(node) {
-        Game.truck.style.left = Game.rect.left + node.x - parseInt(Game.truck.style.width)/2 + "px";
-        Game.truck.style.top = Game.rect.top + node.y - parseInt(Game.truck.style.height)/2 + "px";
+    static moveImg(img, x, y) {
+        img.style.left = Game.rect.left + x - parseInt(img.style.width)/2 + "px";
+        img.style.top = Game.rect.top + y - parseInt(img.style.height)/2 + "px";
     }
 
     static drawNode(node, color) {
@@ -108,6 +112,13 @@ export class Game {
         Game.ctx.beginPath();
         Game.ctx.arc(node.x, node.y, Resolution.circleRadius, 0, Math.PI * 2);
         Game.ctx.fill();
+
+        Game.ctx.font = '30px Arial';             // Set font size and family
+        Game.ctx.fillStyle = 'blue';              // Set text color
+        Game.ctx.textAlign = 'center';            // Set text alignment
+        Game.ctx.textBaseline = 'middle';         // Set text baseline
+        Game.ctx.fillText(node.name, node.x+40, node.y);
+
     }
 
     static drawLine(node1, node2, color) {
@@ -140,7 +151,7 @@ export class Game {
 
     static isGarbageCollected() {
         for (const [node, _] of Game.targets) {
-            if (!Game.visited[node.name]) {
+            if (!Game.playerVisited[node.name]) {
                 console.log(node);
                 console.log("not visited");
                 return false;
@@ -155,18 +166,105 @@ export class Game {
             Game.drawNode(node, '#0003');
         }
         Game.startNode = GameMap.nodes[0];
-        Game.visited = new Array(GameMap.nodes.length)
+        Game.playerVisited = new Array(GameMap.nodes.length)
     }
 
     static initialDraw() {
 
         Game.drawNode(Game.startNode, '#0F0')
         
-        Game.currentNode = Game.startNode;
+        Game.playerCurrentNode = Game.startNode;
 
-        for (let i = 0; i < Game.visited.length; i++) {
-            Game.visited[i] = false;
+        for (let i = 0; i < Game.playerVisited.length; i++) {
+            Game.playerVisited[i] = false;
         }
+    }
+
+    static drawAISolution() {
+        
+        Game.robot.style.display = "block";
+
+        // find solution
+        const start = GameMap.nodes[0];
+        
+        let nodeTargets = [];
+        for (const [node, _] of Game.targets) {
+            nodeTargets.push(node);
+        }     
+
+        let robotPath = FindShortestPathAll(GameMap.graph, start, nodeTargets);
+
+        let robotIdx = 0;      // first idx of `path`
+
+        let robotUndrawnRoads = [];
+        for (let i=0; i<robotPath.nodes.length-1; i++) {
+            const node1 = robotPath.nodes[i];
+            const node2 = robotPath.nodes[i+1];
+
+            let add = true;
+            for (const [n1, n2] of robotUndrawnRoads) {
+                if (n1 == node2 && n2 == node1) {
+                    add = false;
+                    break;
+                }
+            }
+
+            if (add) {
+                robotUndrawnRoads.push([node1, node2]);
+            }
+        }
+
+        Game.ctx.setLineDash([10, 10]);
+
+        // interval
+        const intervalId = setInterval(() => {
+            
+            robotIdx++;
+
+            if (robotIdx == robotPath.nodes.length) {
+                clearInterval(intervalId);
+                return;
+            }           
+
+            const node = robotPath.nodes[robotIdx];
+            Game.moveImg(Game.robot, node.x, node.y);
+            
+            const oldNode = robotPath.nodes[robotIdx-1];
+
+            for (let i=0; i<robotUndrawnRoads.length; i++) {
+                
+                const n1 = robotUndrawnRoads[i][0];
+                const n2 = robotUndrawnRoads[i][1];
+                
+                if ((n1 == oldNode && n2 == node) || (n2 == node && n1 == oldNode)) {
+                    Game.drawLine(oldNode, node, "blue");
+                    robotUndrawnRoads.splice(i, 1);
+                    break;
+                }
+            }
+
+
+        }, 1000);
+
+        // console.log(Game.robotPath);
+
+    }
+
+    static emptyTrash(visited, node) {
+        
+        // empty trash can if first time visiting
+        let wasVisitedBefore = visited[node.name];
+        visited[node.name] = true;
+        
+        if (!wasVisitedBefore && visited[node.name]) {
+            for (const [n, img] of Game.targets) {
+                if (n == node) {
+                    img.src = "./src/css/trash_empty.svg";
+                    break;
+                }
+            }
+        }
+
     }
 
 }
