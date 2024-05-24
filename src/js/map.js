@@ -89,8 +89,8 @@ export class GameMap {
         const h = document.getElementById("canvas").height;
 
         for (let [i, x, y] of nodePos) {
-            x *= (w/1920);
-            y *= (h/1080);
+            x = Math.floor(x * (w/1920));
+            y = Math.floor(y * (h/1080));
             this.nodes.push(new Node(i, x, y));
         }
 
