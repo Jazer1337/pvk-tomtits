@@ -5,6 +5,9 @@ import { FindShortestPathAll } from "./solve.js";
 
 export class Game {
     
+    static SRC_TRASH_EMPTY = "./src/css/trash_empty.svg";
+    static SRC_TRASH_FULL = "./src/css/trash_full.svg";
+
     static canvas = document.getElementById('canvas');
     static ctx = canvas.getContext('2d');
 
@@ -23,7 +26,7 @@ export class Game {
     static robotPath;   // Path
     static robotIdx;    // int
     static robotUndrawnRoads;       // list of [node1, node2]
-    static robotVisited;        // list of node indices
+    static robotVisited = [];        // list of node indices
 
     static setup() {
         
@@ -220,6 +223,11 @@ export class Game {
             }
         }
 
+        // refill trash
+        for (const [_, img] of Game.targets) {
+            img.src = Game.SRC_TRASH_FULL;
+        }
+
         Game.ctx.setLineDash([10, 10]);
 
         // interval
@@ -233,9 +241,10 @@ export class Game {
             }           
 
             const node = robotPath.nodes[robotIdx];
-            Game.moveImg(Game.robot, node.x, node.y);
-            
             const oldNode = robotPath.nodes[robotIdx-1];
+
+            Game.moveImg(Game.robot, node.x, node.y);
+            Game.emptyTrash(Game.robotVisited, node);
 
             for (let i=0; i<robotUndrawnRoads.length; i++) {
                 
@@ -265,7 +274,7 @@ export class Game {
         if (!wasVisitedBefore && visited[node.name]) {
             for (const [n, img] of Game.targets) {
                 if (n == node) {
-                    img.src = "./src/css/trash_empty.svg";
+                    img.src = Game.SRC_TRASH_EMPTY;
                     break;
                 }
             }
