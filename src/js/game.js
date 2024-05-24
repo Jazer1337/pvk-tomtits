@@ -29,15 +29,16 @@ export class Game {
         
         Game.rect = Game.canvas.getBoundingClientRect();
 
+        const x = GameMap.nodes[0].x;
+        const y = GameMap.nodes[0].y;
+
         // setup truck
-        Game.truck = Game.createImg("./src/css/garbage_truck.svg", 150);
+        Game.truck = Game.createImg("./src/css/garbage_truck.svg", 150, x, y);
         Game.truck.style.zIndex = 1;                                        // show on top of trash cans
-        Game.moveImg(Game.truck, GameMap.nodes[0].x, GameMap.nodes[0].y);
 
         // setup robot
-        Game.robot = Game.createImg("./src/css/ai_robot.png", 100);
+        Game.robot = Game.createImg("./src/css/ai_robot.png", 100, x, y);
         Game.robot.style.zIndex = 1;
-        Game.moveImg(Game.robot, GameMap.nodes[0].x, GameMap.nodes[0].y);
         Game.robot.style.display = "none";
 
         document.getElementById("count").innerHTML = "Hämta sopor i alla blåa noder och ta dig sedan tillbaka till sopstation längst upp till vänster";
@@ -86,17 +87,25 @@ export class Game {
         });
     }
 
-    static createImg(src, width) {
+    static createImg(src, width, x, y) {
         const img = document.createElement("img");
         document.getElementById("canvas-container").appendChild(img);
 
         img.src = src;
-        img.style.position = "absolute";
-        img.style.width = width / Resolution.SCALE + "px";
 
-        img.style.height = window.getComputedStyle(img).height;
+        img.onload = () => {
+            const ratio = img.width / img.height;
+            const w = width / Resolution.SCALE;
+            const h = w / ratio;
 
-        img.style.pointerEvents = "none";       // ignore events, since they should go to canvas, not this img
+            img.style.position = "absolute";
+            img.style.width = w + "px";
+            img.style.height = h + "px";
+
+            img.style.pointerEvents = "none";       // ignore events, since they should go to canvas, not this img
+
+            Game.moveImg(img, x, y);
+        }
 
         return img;
     }
@@ -141,10 +150,7 @@ export class Game {
             const node = nodesLeft.splice(randIdx, 1)[0];
 
             // create img
-            const img = Game.createImg("./src/css/trash_full.svg", 100);
-            img.style.left = Game.rect.left + node.x - parseInt(img.style.width)/2 + "px";
-            img.style.top = Game.rect.top + node.y - parseInt(img.style.height)/2 + "px";
-
+            const img = Game.createImg("./src/css/trash_full.svg", 100, node.x, node.y);
             Game.targets.push([node, img]);
         }
     }
