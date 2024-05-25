@@ -42,5 +42,9 @@ export class UI {
         let btn = document.getElementById("button-reset-level");
         btn.addEventListener("click", Game.reset);
 
+        document.addEventListener("contextmenu", event => {
+            event.preventDefault();
+        });
+
     }
 }
