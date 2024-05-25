@@ -89,7 +89,7 @@ export class Game {
         if (Game.gameOver || Game.playerMoving) {
             return;
         }
-        
+
         const radius = 7 * Resolution.circleRadius;     // not necessary to press exactly on the circle (outside is ok)
         
         const x = event.clientX - Game.canvasRect.x;
@@ -148,6 +148,8 @@ export class Game {
 
     static reset() {
 
+        const lastNode = Game.playerCurrentNode;
+
         // reset stats
         Game.gameOver = false;
         Game.playerScore = 0;
@@ -172,18 +174,16 @@ export class Game {
             Game.drawNode(node, '#0003');
         }
 
-        Game.player.reset();
+        Game.player.reset(lastNode !== Game.startNode);
         Game.robot.reset();
         
         for (const sprite of Game.allTrashSprites) {
-            clearInterval(sprite.intervalId);
-            sprite.setVisible(false);
+            sprite.reset()
         }
 
         for (const [node, sprite] of Game.trash) {
-            sprite.reset();
-            sprite.setVisible(true);
             sprite.moveTo(node.x, node.y);
+            sprite.setVisibleAnim(true);
         }
 
     }
@@ -191,7 +191,13 @@ export class Game {
     static nextLevel(step) {
         Game.level += step;
 
-        Game.reset()        // to stop intervals
+        
+        clearInterval(Game.player.intervalId);
+        clearInterval(Game.robot.intervalId);
+        for (const [_, sprite] of Game.trash) {
+            clearInterval(sprite.intervalId);
+        }
+
         Game.trash = [];
         Game.generateTrash();
         Game.reset();           // to redraw new trash

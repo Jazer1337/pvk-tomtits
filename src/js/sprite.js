@@ -6,8 +6,9 @@ export class Sprite {
 
     x;      // left
     y;      // top
-    WIDTH;
-    HEIGHT;
+    width;
+    height;
+    sizeRatio;
 
     img;    // HTML elem
 
@@ -16,6 +17,7 @@ export class Sprite {
     ORIG_IMG_SRC;     // used to reset
     ORIG_X;
     ORIG_Y;
+    ORIG_WIDTH;     // used to resize back from 0x0
     ORIG_VISIBLE;
 
     isLoaded = false;       // used to move generated trash
@@ -26,6 +28,7 @@ export class Sprite {
         this.ORIG_IMG_SRC = imgSrc;
         this.ORIG_X = x;
         this.ORIG_Y = y;
+        this.ORIG_WIDTH = width / Resolution.SCALE;
         this.ORIG_VISIBLE = visible;
 
         this.img = new Image(width);
@@ -34,18 +37,15 @@ export class Sprite {
 
         this.img.src = imgSrc;
         this.img.onload = () => {
-            const ratio = this.img.width / this.img.height;
-            const w = Math.floor(width / Resolution.SCALE);
-            const h = Math.floor(w / ratio);
+            this.sizeRatio = this.img.width / this.img.height;
+            this.width = Math.floor(this.ORIG_WIDTH);
+            this.height = Math.floor(this.width / this.sizeRatio);
 
             this.img.style.position = "absolute";
-            this.img.style.width = w + "px";
-            this.img.style.height = h + "px";
+            this.img.style.width = this.width + "px";
+            this.img.style.height = this.height + "px";
 
             this.img.style.pointerEvents = "none";       // ignore events, since they should go to canvas, not this img
-
-            this.WIDTH = w;
-            this.HEIGHT = h;
 
             this.moveTo(x, y);
 
@@ -54,15 +54,105 @@ export class Sprite {
         }
     }
 
-    reset() {
+    reset(anim=false) {
         clearInterval(this.intervalId);
         this.img.src = this.ORIG_IMG_SRC;
         this.moveTo(this.ORIG_X, this.ORIG_Y);
-        this.setVisible(this.ORIG_VISIBLE);
+        if (anim) {
+            this.setVisibleAnim(this.ORIG_VISIBLE);
+        }
+        else {
+            this.setVisible(this.ORIG_VISIBLE);
+        }
+    }
+
+    setSize(w, h=null) {
+        
+        const centerX = this.x + this.width/2;
+        const centerY = this.y + this.height/2;
+
+        this.width = w;
+        
+        if (h === null) {
+            h = this.width / this.sizeRatio;
+        }
+        this.height = h;
+        
+        this.img.style.width = this.width + "px";
+        this.img.style.height = this.height + "px";
+
+        this.moveTo(centerX, centerY);
     }
 
     setVisible(v) {
-        this.img.style.visibility = v ? "visible" : "hidden";
+        if (v) {
+            this.img.style.visibility = "visible";
+            if (this.width == 0) {
+                this.setSize(this.ORIG_WIDTH)
+            }
+        }
+        else {
+            this.img.style.visibility = "hidden";
+        }
+    }
+
+    setVisibleAnim(toVisible, onFinish=()=>{}, onNewFrame=()=>{}) {
+
+        const fps = 30;
+        const speed = 2 / Resolution.SCALE;       // pixels/second
+        const interval = 1000/fps;
+
+        const dist = this.width;
+        const FRAMES = Math.floor(dist/speed*fps);
+        let frame = 0;        
+
+        let currentWidth, currentHeight;
+        let finalWidth, finalHeight;
+        let dx, dy;
+
+        if (toVisible) {
+            currentWidth = 0;
+            currentHeight = 0;
+
+            finalWidth = this.ORIG_WIDTH;
+            finalHeight = Math.floor(this.ORIG_WIDTH / this.sizeRatio);           
+
+            dx = finalWidth * speed / fps;
+            dy = finalHeight * speed / fps;
+            this.setSize(1, 0);             // 0,0 doesnt work, neither does 0,1
+            this.setVisible(true);
+        }
+        else {
+            currentWidth = this.width;
+            currentHeight = this.height;
+            finalWidth = 0;
+            finalHeight = 0;
+            dx = - currentWidth * speed / fps;
+            dy = - currentHeight * speed / fps;
+        }
+
+        this.intervalId = setInterval(() => {
+    
+            onNewFrame(frame/FRAMES);
+            frame++;
+
+            currentWidth += dx;
+            currentHeight += dy;
+
+            if ((toVisible && currentWidth >= finalWidth) || (!toVisible && currentWidth <= finalWidth)) {
+                this.setSize(finalWidth, finalHeight);
+                clearInterval(this.intervalId);
+
+                this.setVisible(toVisible);
+                onFinish();
+            }
+            else {
+                this.setSize(currentWidth, currentHeight);
+            }
+            
+        }, interval);
+
+
     }
 
     setHorizontalFlip(v) {
@@ -75,8 +165,8 @@ export class Sprite {
         this.y = y;
 
         if (centered) {
-            this.x -= this.WIDTH/2;
-            this.y -= this.HEIGHT/2;
+            this.x -= this.width/2;
+            this.y -= this.height/2;
         }
 
         this.img.style.left = Game.canvasRect.x + Math.floor(this.x) + "px";
@@ -91,10 +181,10 @@ export class Sprite {
         this.img.style.top = Game.canvasRect.y + Math.floor(this.y) + "px";
     }
 
-    moveToAnim(x, y, onFinish, onNewFrame=()=>{}) {
+    moveToAnim(x, y, onFinish=()=>{}, onNewFrame=()=>{}) {
 
-        x -= this.WIDTH/2;      // final x,y should be for topleft, not center
-        y -= this.HEIGHT/2;
+        x -= this.width/2;      // final x,y should be for topleft, not center
+        y -= this.height/2;
 
         const distX = x - this.x;
         const distY = y - this.y;
