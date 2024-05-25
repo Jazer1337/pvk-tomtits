@@ -11,9 +11,26 @@ export class Sprite {
 
     img;    // HTML elem
 
-    constructor(imgSrc, width, x, y) {
-        this.img = document.createElement("img");
-        document.getElementById("canvas-container").appendChild(this.img);
+    intervalId;     // for moveToAnim
+
+    ORIG_IMG_SRC;     // used to reset
+    ORIG_X;
+    ORIG_Y;
+    ORIG_VISIBLE;
+
+    isLoaded = false;       // used to move generated trash
+
+    // NOTE: x, y will be center
+    constructor(imgSrc, width, x, y, visible=true) {
+        
+        this.ORIG_IMG_SRC = imgSrc;
+        this.ORIG_X = x;
+        this.ORIG_Y = y;
+        this.ORIG_VISIBLE = visible;
+
+        this.img = new Image(width);
+        
+        document.getElementById("column-1").appendChild(this.img);
 
         this.img.src = imgSrc;
         this.img.onload = () => {
@@ -32,7 +49,20 @@ export class Sprite {
 
             this.moveTo(x, y);
 
+            this.img.onload = () => {};
+            this.isLoaded = true;
         }
+    }
+
+    reset() {
+        clearInterval(this.intervalId);
+        this.img.src = this.ORIG_IMG_SRC;
+        this.moveTo(this.ORIG_X, this.ORIG_Y);
+        this.setVisible(this.ORIG_VISIBLE);
+    }
+
+    setVisible(v) {
+        this.img.style.visibility = v ? "visible" : "hidden";
     }
 
     moveTo(x, y, centered=true) {
@@ -45,19 +75,19 @@ export class Sprite {
             this.y -= this.HEIGHT/2;
         }
 
-        this.img.style.left = Game.canvasX + Math.floor(this.x) + "px";
-        this.img.style.top = Game.canvasY + Math.floor(this.y) + "px";
+        this.img.style.left = Game.canvasRect.x + Math.floor(this.x) + "px";
+        this.img.style.top = Game.canvasRect.y + Math.floor(this.y) + "px";
     }
 
     moveBy(dx, dy) {
         this.x += dx;
         this.y += dy;
 
-        this.img.style.left = Game.canvasX + Math.floor(this.x) + "px";
-        this.img.style.top = Game.canvasY + Math.floor(this.y) + "px";
+        this.img.style.left = Game.canvasRect.x + Math.floor(this.x) + "px";
+        this.img.style.top = Game.canvasRect.y + Math.floor(this.y) + "px";
     }
 
-    moveToAnim(x, y, onFinish) {
+    moveToAnim(x, y, onFinish, onNewFrame=()=>{}) {
 
         x -= this.WIDTH/2;      // final x,y should be for topleft, not center
         y -= this.HEIGHT/2;
@@ -82,11 +112,17 @@ export class Sprite {
         // onFinish();
         // return;
 
-        const intervalId = setInterval(() => {
+        const FRAMES = Math.floor(dist/speed*fps);
+        let frame = 0;        
+
+        this.intervalId = setInterval(() => {
+
+            onNewFrame(frame/FRAMES);
+            frame++;
 
             if ((moveRight && this.x+dx >= x) || (!moveRight && this.x+dx <= x)) {
                 this.moveTo(x, y, false);
-                clearInterval(intervalId);
+                clearInterval(this.intervalId);
                 onFinish();
             }
             else {

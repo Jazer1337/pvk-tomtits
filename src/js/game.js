@@ -10,93 +10,234 @@ export class Game {
     static SRC_TRASH_FULL = "./src/css/trash_full.svg";
 
     static canvas = document.getElementById('canvas');
-    static canvasX;
-    static canvasY;
+    static canvasRect;
     static ctx = canvas.getContext('2d');
 
     static gameOver = false;
     static startNode;
-    static count = 0;
-    static targets = [];        // list of [node, Sprite]
-    static playerVisited = [];        // list of node indices
+    static trash = [];        // list of [node, Sprite]
+    static numTrashLevels = [3, 5, 8];
+    static level = 0;
+    static allTrashSprites = [];       // 8 sprites. No more are created, only reused
     
+    static playerTrashCollected = [];       // nodes corresponding to those in `allTrashSprites`
+    static playerScore = 0;
     static playerCurrentNode;
     static player;      // Sprite
     static playerMoving = false;        // player is unable to move while animation is playing
-
+    static playerScoreElem;
+    
+    static robotScore = 0;
     static robot;       // Sprite
     static robotPath;   // Path
     static robotIdx;    // int
     static robotUndrawnRoads;       // list of [node1, node2]
     static robotVisited = [];        // list of node indices
+    static robotScoreElem;
+
+    static scoreCompareElem;
 
     static setup() {
         
-        const rect = Game.canvas.getBoundingClientRect();
-        Game.canvasX = Math.floor(rect.x);
-        Game.canvasY = Math.floor(rect.y);
+        Game.startNode = GameMap.nodes[0];
 
-        const x = GameMap.nodes[0].x;
-        const y = GameMap.nodes[0].y;
+        Game.playerScoreElem = document.getElementById("score-player").getElementsByTagName("div")[0];
+        Game.robotScoreElem = document.getElementById("score-robot").getElementsByTagName("div")[0];
+        Game.scoreCompareElem = document.getElementById("score-compare");
+
+        Game.canvasRect = Game.canvas.getBoundingClientRect();
+
+        const x = Game.startNode.x;
+        const y = Game.startNode.y;
 
         // setup truck
         Game.player = new Sprite("./src/css/garbage_truck.svg", 150, x, y);
         Game.player.img.style.zIndex = 1;                                        // show on top of trash cans
 
         // setup robot
-        Game.robot = new Sprite("./src/css/ai_robot.png", 100, x, y);
+        Game.robot = new Sprite("./src/css/ai_robot.png", 100, x, y, false);
         Game.robot.img.style.zIndex = 1;
-        Game.robot.img.style.display = "none";
-
-        document.getElementById("count").innerHTML = "Hämta sopor i alla blåa noder och ta dig sedan tillbaka till sopstation längst upp till vänster";
         
-        // init game
-        Game.generateMap();
-        Game.initialDraw();
-        Game.generateGarbage(3);              
+        // create sprites and save (they will be reused)
+        const lastLevelNumTrash = Game.numTrashLevels[Game.numTrashLevels.length-1];
+        for (let i=0; i<lastLevelNumTrash; i++) {
+            Game.allTrashSprites[i] = new Sprite(Game.SRC_TRASH_FULL, 100, 0, 0, false);
+        }
+        Game.generateTrash(Game.numTrashLevels[Game.level]);
         
-        Game.canvas.addEventListener('click', event => {
-
-            if (Game.gameOver || Game.playerMoving) {
-                return;
+        // wait for all sprites to be loaded before moving trash
+        const iId = setInterval(() => {
+            let allLoaded = true;
+            for (const sprite of Game.allTrashSprites) {
+                if (!sprite.isLoaded) {
+                    allLoaded = false;
+                    break;
+                }
             }
-            
-            const radius = 7 * Resolution.circleRadius;     // not necessary to press exactly on the circle (outside is ok)
-            
-            const x = event.clientX - Game.canvasX;
-            const y = event.clientY - Game.canvasY;
-            const clickedNode = GameMap.nodes.find(node => Math.hypot(node.x-x, node.y-y) < radius);
+            if (allLoaded) {
+                clearInterval(iId);
+                Game.reset();
+            }            
+        }, 100);
+        
+        Game.canvas.addEventListener('click', Game.onClick);
+    }
 
-            // if neighbor
-            if (GameMap.graph.getNeighborEdges(Game.playerCurrentNode).find(edge => edge.to == clickedNode)) {
+    static onClick(event) {
+        if (Game.gameOver || Game.playerMoving) {
+            return;
+        }
+        
+        const radius = 7 * Resolution.circleRadius;     // not necessary to press exactly on the circle (outside is ok)
+        
+        const x = event.clientX - Game.canvasRect.x;
+        const y = event.clientY - Game.canvasRect.y;
+        const clickedNode = GameMap.nodes.find(node => Math.hypot(node.x-x, node.y-y) < radius);
 
-                // visit node
-                Game.count += GameMap.graph.getWeight(Game.playerCurrentNode, clickedNode) * Resolution.SCALE;
-                Game.drawLine(Game.playerCurrentNode, clickedNode, '#F00');
-                Game.playerCurrentNode = clickedNode;
+        // if neighbor
+        if (GameMap.graph.getNeighborEdges(Game.playerCurrentNode).find(edge => edge.to == clickedNode)) {
 
-                function onFinish() {
-                    Game.emptyTrash(Game.playerVisited, clickedNode);
-    
-                    // update info
-                    let str = "Du har åkt " + parseInt(Game.count) + " meter";
-    
-                    if (Game.playerCurrentNode == Game.startNode && Game.isGarbageCollected()){
-                        Game.gameOver = true;
-                        str = "Du kom tillbaka på " + parseInt(Game.count) + " meter! Med alla sopor 😱";
-                        Game.drawAISolution();
+            const oldPlayerScore = Game.playerScore;
+            const edgeWeight = GameMap.graph.getWeight(Game.playerCurrentNode, clickedNode) * Resolution.SCALE;
+
+            Game.drawLine(Game.playerCurrentNode, clickedNode, '#F00');
+            Game.playerCurrentNode = clickedNode;
+
+            function onFinish() {
+
+                let collect = true;
+                for (const node of Game.playerTrashCollected) {
+                    if (node == clickedNode) {
+                        collect = false;
+                        break;
                     }
-    
-                    document.getElementById("count").innerHTML = str;
-
-                    Game.playerMoving = false;
                 }
 
-                Game.playerMoving = true;
-                Game.player.moveToAnim(clickedNode.x, clickedNode.y, onFinish);
-            }           
+                if (collect && Game.emptyTrash(clickedNode)) {
+                    Game.playerTrashCollected.push(clickedNode);
+                };
 
-        });
+                if (Game.playerCurrentNode == Game.startNode && Game.playerTrashCollected.length == Game.trash.length){
+                    Game.gameOver = true;
+
+                    Game.updatePlayerScoreText(true);
+                    Game.drawAISolution();
+                }
+                else {
+                    Game.playerScore = oldPlayerScore + edgeWeight;
+                    Game.updatePlayerScoreText();
+                }
+
+                Game.playerMoving = false;
+            }
+
+            function onNewFrame(progress) {
+                Game.playerScore = oldPlayerScore + edgeWeight * progress;
+                Game.updatePlayerScoreText();
+            }
+
+            Game.playerMoving = true;
+            Game.player.moveToAnim(clickedNode.x, clickedNode.y, onFinish, onNewFrame);
+        } 
+    }
+
+    static reset() {
+
+        // reset stats
+        Game.gameOver = false;
+        Game.playerScore = 0;
+        Game.playerCurrentNode = Game.startNode;
+        Game.playerMoving = false;
+        Game.playerTrashCollected = [];
+
+        Game.robotScore = 0;
+        Game.updatePlayerScoreText();
+        Game.updateRobotScoreText();
+
+        // reset visuals
+        Game.ctx.clearRect(0, 0, Game.canvasRect.width, Game.canvasRect.height);
+
+        const elemCompare = document.getElementById("score-compare");
+        elemCompare.style.backgroundColor = "lightgray";
+        elemCompare.innerHTML = "Är du klurigare än en AI?";
+
+        Game.drawNode(Game.startNode, '#0F0')
+
+        for (const node of GameMap.nodes) {
+            Game.drawNode(node, '#0003');
+        }
+
+        Game.player.reset();
+        Game.robot.reset();
+        
+        for (const sprite of Game.allTrashSprites) {
+            clearInterval(sprite.intervalId);
+            sprite.setVisible(false);
+        }
+
+        for (const [node, sprite] of Game.trash) {
+            sprite.reset();
+            sprite.setVisible(true);
+            sprite.moveTo(node.x, node.y);
+        }
+
+    }
+
+    static nextLevel(step) {
+        Game.level += step;
+
+        Game.reset()        // to stop intervals
+        Game.trash = [];
+        Game.generateTrash();
+        Game.reset();           // to redraw new trash
+    }
+
+    static updatePlayerScoreText(finished=false) {
+        if (finished) {
+            this.playerScoreElem.innerHTML = "✅ " + Math.floor(Game.playerScore) + " meter";
+        }
+        else {
+            this.playerScoreElem.innerHTML = Math.floor(Game.playerScore) + " meter";
+        }
+    }
+    
+    static updateRobotScoreText(finished=false) {
+        if (finished) {
+            this.robotScoreElem.innerHTML = "✅ " + Math.floor(Game.robotScore) + " meter";
+        }
+        else {
+            this.robotScoreElem.innerHTML = Math.floor(Game.robotScore) + " meter";
+        }
+    }
+
+    static updateCompareScoreText() {
+        Game.robotScore = Math.floor(Game.robotScore);
+        Game.playerScore = Math.floor(Game.playerScore);
+        
+        const diff = Math.abs(Game.playerScore - Game.robotScore);
+        let str;
+        let color;
+
+        if (Game.playerScore == Game.robotScore) {
+            color = "lightgreen";
+            str = `Du är lika klurig som en AI! <br>
+                Du hittade en resväg som är lika kort som en AI:s.`;
+        }
+        else if (Game.playerScore < Game.robotScore) {
+            color = "lightgreen";
+            str = `Du är klurigare än en AI! <br>
+                Du hittade en resväg som var ${diff} meter kortare än en AI:s.`;
+        }
+        else {
+            color = "orange";
+            str =
+                `Bra försök! <br>
+                Du hittade en resväg som var ${diff} meter längre än en AI:s.`;
+        }
+
+        Game.scoreCompareElem.style.backgroundColor = color;
+        Game.scoreCompareElem.innerHTML = str;
+        Game.scoreCompareElem.style.visibility = "visible";
     }
 
     static drawNode(node, color) {
@@ -122,62 +263,30 @@ export class Game {
         Game.ctx.stroke();
     }
 
-    static generateGarbage(amount) {
+    static generateTrash() {
         
         let nodesLeft = [...GameMap.nodes];
 
-        for (let i=0; i<amount; i++) {
+        for (let i=0; i<Game.numTrashLevels[Game.level]; i++) {
             
             // pick random trash
             const randIdx = Math.floor(Math.random() * (nodesLeft.length - 1) + 1);
             const node = nodesLeft.splice(randIdx, 1)[0];
 
-            // create sprite
-            const sprite = new Sprite("./src/css/trash_full.svg", 100, node.x, node.y);
-            Game.targets.push([node, sprite]);
-        }
-    }
-
-    static isGarbageCollected() {
-        for (const [node, _] of Game.targets) {
-            if (!Game.playerVisited[node.name]) {
-                console.log(node);
-                console.log("not visited");
-                return false;
-            }
-        }
-        return true;
-    }
-
-    static generateMap() {
-
-        for (let node of GameMap.nodes) {
-            Game.drawNode(node, '#0003');
-        }
-        Game.startNode = GameMap.nodes[0];
-        Game.playerVisited = new Array(GameMap.nodes.length)
-    }
-
-    static initialDraw() {
-
-        Game.drawNode(Game.startNode, '#0F0')
-        
-        Game.playerCurrentNode = Game.startNode;
-
-        for (let i = 0; i < Game.playerVisited.length; i++) {
-            Game.playerVisited[i] = false;
+            Game.trash[i] = [node, Game.allTrashSprites[i]];
+            
         }
     }
 
     static drawAISolution() {
         
-        Game.robot.img.style.display = "block";
+        Game.robot.setVisible(true);
 
         // find solution
         const start = GameMap.nodes[0];
         
         let nodeTargets = [];
-        for (const [node, _] of Game.targets) {
+        for (const [node, _] of Game.trash) {
             nodeTargets.push(node);
         }     
 
@@ -204,21 +313,26 @@ export class Game {
         }
 
         // refill trash
-        for (const [_, sprite] of Game.targets) {
+        for (const [_, sprite] of Game.trash) {
             sprite.img.src = Game.SRC_TRASH_FULL;
         }
 
         Game.ctx.setLineDash([10, 10]);
 
+        let oldRobotScore;
+        let edgeWeight;
+        let newNode;
 
         function moveToNextNode() {
             robotIdx++;
 
             if (robotIdx == robotPath.nodes.length) {
+                Game.updateRobotScoreText(true);
+                Game.updateCompareScoreText();
                 return;
             }
 
-            const node = robotPath.nodes[robotIdx];
+            newNode = robotPath.nodes[robotIdx];
             const oldNode = robotPath.nodes[robotIdx-1];
 
             for (let i=0; i<robotUndrawnRoads.length; i++) {
@@ -226,45 +340,47 @@ export class Game {
                 const n1 = robotUndrawnRoads[i][0];
                 const n2 = robotUndrawnRoads[i][1];
                 
-                if ((n1 == oldNode && n2 == node) || (n2 == node && n1 == oldNode)) {
-                    Game.drawLine(oldNode, node, "blue");
+                if ((n1 == oldNode && n2 == newNode) || (n2 == newNode && n1 == oldNode)) {
+                    Game.drawLine(oldNode, newNode, "blue");
                     robotUndrawnRoads.splice(i, 1);
                     break;
                 }
             }
 
-            Game.robot.moveToAnim(node.x, node.y, () => {
-                Game.emptyTrash(Game.robotVisited, node);
-
-                setTimeout(() => {
-                    moveToNextNode();       // wait before moving to next trash
-                }, 250);
-            });
-            
+            oldRobotScore = Game.robotScore;
+            edgeWeight = GameMap.graph.getWeight(oldNode, newNode) * Resolution.SCALE;
+            Game.robot.moveToAnim(newNode.x, newNode.y, onFinish, onNewFrame);
 
         }
 
-        setTimeout(() => {
-            moveToNextNode();
-        }, 250);
+        function onFinish() {
+            Game.emptyTrash(newNode);  // NOTE: will empty even if already empty, but doesn't matter
+                                       // since it's not being tracked.
 
+            Game.robotScore = oldRobotScore + edgeWeight;
+            Game.updateRobotScoreText();
+
+            setTimeout(() => {
+                moveToNextNode();       // wait before moving to next trash
+            }, 250);
+        }
+
+        function onNewFrame(progress) {
+            Game.robotScore = oldRobotScore + edgeWeight * progress;
+            Game.updateRobotScoreText();
+        }
+
+        setTimeout(moveToNextNode, 1000);
     }
 
-    static emptyTrash(visited, node) {
-        
-        // empty trash can if first time visiting
-        let wasVisitedBefore = visited[node.name];
-        visited[node.name] = true;
-        
-        if (!wasVisitedBefore && visited[node.name]) {
-            for (const [n, sprite] of Game.targets) {
-                if (n == node) {
-                    sprite.img.src = Game.SRC_TRASH_EMPTY;
-                    break;
-                }
+    static emptyTrash(node) {
+        for (const [n, sprite] of Game.trash) {
+            if (n == node) {
+                sprite.img.src = Game.SRC_TRASH_EMPTY;
+                return true;
             }
         }
-
+        return false;
     }
 
 }

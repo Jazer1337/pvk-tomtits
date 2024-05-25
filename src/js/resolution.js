@@ -1,44 +1,67 @@
 
 export class Resolution {
 
-    static DESIRED_WIDTH = 1920;
-    static DESIRED_HEIGHT = 1080;
-
     static SCALE;       // used for scaling images and props on the game map
     
-    // style variables for 1920x1080 (scales automatically)
-    static canvasMargin = 0.1;      // percent
-    static circleRadius = 10;
+    static circleRadius = 10;       // for 1920x1080
 
     static setup() {  
+
+        const marginBetweenCols = parseInt(window.getComputedStyle(document.getElementById("column-2")).marginLeft);
+
+        const margin = 20;
+
+        const desiredW = 1920 + 350;
+        const desiredH = 1080;
+
+        let desiredRatio = desiredW / desiredH;
         
-        const canvas = document.getElementById("canvas");
-       
-        let desiredRatio = this.DESIRED_WIDTH / this.DESIRED_HEIGHT;
-        
-        let winW = window.innerWidth;
-        let winH = window.innerHeight;
+        let winW = window.innerWidth - 2*margin - marginBetweenCols;
+        let winH = window.innerHeight - 2*margin;
         
         let winRatio = winW / winH;
         
-        let w, h;
+        let totalW, totalH;
         if (winRatio > desiredRatio) {
-            h = winH;
-            w = winH * desiredRatio;     // screen is wider: height constrains svg size
+            totalH = winH;
+            totalW = totalH * desiredRatio;     // screen is wider: height constrains svg size
         }
         else {
-            w = winW;
-            h = winW / desiredRatio;       // screen is taller/same aspect ratio: width constrains svg size
+            totalW = winW;
+            totalH = totalW / desiredRatio;       // screen is taller/same aspect ratio: width constrains svg size
         }
 
-        this.SCALE = this.DESIRED_WIDTH / w;
+        this.SCALE = desiredW / totalW;
 
         // set sizes based on potential new ratio
-        this.circleRadius = (this.circleRadius/this.DESIRED_WIDTH) * w;
+        this.circleRadius = this.circleRadius * totalW / 1920;
+
+        const col1 = document.getElementById("column-1");
+        col1.style.width = (1920/1080) * totalH + "px";
+        col1.style.height = totalH + "px";
+
+        const col2 = document.getElementById("column-2");
+        col2.style.width = totalW - parseInt(col1.style.width) + "px";
+        col2.style.height = totalH + "px";
+        col2.style.marginLeft = marginBetweenCols + "px";
+
 
         // set **internal** size for canvas. Can be set in the element in html (or here in js) but not in css.
-        canvas.width = w * (1-this.canvasMargin);
-        canvas.height = h * (1-this.canvasMargin);
+        const canvas = document.getElementById("canvas");
+        canvas.width = parseInt(col1.style.width);      // NOTE: without "px"
+        canvas.height = parseInt(col1.style.height);
+
+        canvas.style.width = col1.style.width;
+        canvas.style.height = col1.style.height;
+
+        const scorePlayer = document.getElementById("score-player");
+        const scorePlayerImg = scorePlayer.getElementsByTagName("img")[0];
+        scorePlayerImg.style.width = 100 / this.SCALE + "px";
+        
+        const scoreRobot = document.getElementById("score-robot");
+        const scoreRobotImg = scoreRobot.getElementsByTagName("img")[0];
+        scoreRobotImg.style.width = 75 / this.SCALE + "px";
+
     }
 
 }
