@@ -186,11 +186,12 @@ export class Game {
             sprite.setVisibleAnim(true);
         }
 
+        document.getElementById("buttons").classList.remove("blinking-bg");
+
     }
 
     static nextLevel(step) {
         Game.level += step;
-
         
         clearInterval(Game.player.intervalId);
         clearInterval(Game.robot.intervalId);
@@ -341,6 +342,8 @@ export class Game {
                 Game.updateRobotScoreText(true);
                 Game.updateCompareScoreText();
                 Game.ctx.setLineDash([]);
+
+                document.getElementById("buttons").classList.add("blinking-bg");
                 return;
             }
 

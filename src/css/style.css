@@ -97,3 +97,16 @@ button {
 button > img {
     margin-right: 10px;
 }
+
+#buttons {
+    --background-color: lightgray;
+}
+
+.blinking-bg {
+    animation: blink-bg 2s infinite;
+}
+
+@keyframes blink-bg {
+    30%, 70% { background-color: var(--background-color); }
+    0%, 100% { background-color: lightblue; }
+}
