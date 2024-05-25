@@ -20,6 +20,7 @@ export class Game {
     static level = 0;
     static allTrashSprites = [];       // 8 sprites. No more are created, only reused
     
+    static PLAYER_PATH_COLOR = "rgba(255, 0, 0, 0.5)";
     static playerTrashCollected = [];       // nodes corresponding to those in `allTrashSprites`
     static playerScore = 0;
     static playerCurrentNode;
@@ -27,6 +28,7 @@ export class Game {
     static playerMoving = false;        // player is unable to move while animation is playing
     static playerScoreElem;
     
+    static ROBOT_PATH_COLOR = "rgba(0, 0, 255, 0.5)";
     static robotScore = 0;
     static robot;       // Sprite
     static robotPath;   // Path
@@ -100,7 +102,7 @@ export class Game {
             const oldPlayerScore = Game.playerScore;
             const edgeWeight = GameMap.graph.getWeight(Game.playerCurrentNode, clickedNode) * Resolution.SCALE;
 
-            Game.drawLine(Game.playerCurrentNode, clickedNode, '#F00');
+            Game.drawLine(Game.playerCurrentNode, clickedNode, Game.PLAYER_PATH_COLOR);
             Game.playerCurrentNode = clickedNode;
 
             function onFinish() {
@@ -329,23 +331,14 @@ export class Game {
             if (robotIdx == robotPath.nodes.length) {
                 Game.updateRobotScoreText(true);
                 Game.updateCompareScoreText();
+                Game.ctx.setLineDash([]);
                 return;
             }
 
             newNode = robotPath.nodes[robotIdx];
             const oldNode = robotPath.nodes[robotIdx-1];
 
-            for (let i=0; i<robotUndrawnRoads.length; i++) {
-                
-                const n1 = robotUndrawnRoads[i][0];
-                const n2 = robotUndrawnRoads[i][1];
-                
-                if ((n1 == oldNode && n2 == newNode) || (n2 == newNode && n1 == oldNode)) {
-                    Game.drawLine(oldNode, newNode, "blue");
-                    robotUndrawnRoads.splice(i, 1);
-                    break;
-                }
-            }
+            Game.drawLine(oldNode, newNode, Game.ROBOT_PATH_COLOR);
 
             oldRobotScore = Game.robotScore;
             edgeWeight = GameMap.graph.getWeight(oldNode, newNode) * Resolution.SCALE;
