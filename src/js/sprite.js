@@ -65,6 +65,10 @@ export class Sprite {
         this.img.style.visibility = v ? "visible" : "hidden";
     }
 
+    setHorizontalFlip(v) {
+        this.img.style.transform = v ? "scaleX(-1)" : "scaleX(1)";
+    }
+
     moveTo(x, y, centered=true) {
         
         this.x = x;

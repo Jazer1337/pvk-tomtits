@@ -102,6 +102,9 @@ export class Game {
             const oldPlayerScore = Game.playerScore;
             const edgeWeight = GameMap.graph.getWeight(Game.playerCurrentNode, clickedNode) * Resolution.SCALE;
 
+            Game.player.setHorizontalFlip(clickedNode.x < Game.playerCurrentNode.x)
+
+
             Game.drawLine(Game.playerCurrentNode, clickedNode, Game.PLAYER_PATH_COLOR);
             Game.playerCurrentNode = clickedNode;
 
