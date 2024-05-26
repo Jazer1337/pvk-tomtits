@@ -2,6 +2,7 @@ import { Resolution } from "./resolution.js";
 import { GameMap } from "./map.js";
 import { FindShortestPathAll } from "./solve.js";
 import { Sprite } from "./sprite.js";
+import { UI } from "./ui.js";
 
 
 export class Game {
@@ -20,12 +21,13 @@ export class Game {
     static level = 0;
     static allTrashSprites = [];       // 8 sprites. No more are created, only reused
     
+    static ignoreClicks = false;        // due to resetting
+
     static PLAYER_PATH_COLOR = "rgba(255, 0, 0, 0.5)";
     static playerTrashCollected = [];       // nodes corresponding to those in `allTrashSprites`
     static playerScore = 0;
     static playerCurrentNode;
     static player;      // Sprite
-    static playerMoving = false;        // player is unable to move while animation is playing
     static playerScoreElem;
     
     static ROBOT_PATH_COLOR = "rgba(0, 0, 255, 0.5)";
@@ -86,7 +88,7 @@ export class Game {
     }
 
     static onClick(event) {
-        if (Game.gameOver || Game.playerMoving) {
+        if (Game.gameOver || Game.ignoreClicks) {
             return;
         }
 
@@ -133,7 +135,7 @@ export class Game {
                     Game.updatePlayerScoreText();
                 }
 
-                Game.playerMoving = false;
+                Game.ignoreClicks = false;
             }
 
             function onNewFrame(progress) {
@@ -141,12 +143,14 @@ export class Game {
                 Game.updatePlayerScoreText();
             }
 
-            Game.playerMoving = true;
+            Game.ignoreClicks = true;
             Game.player.moveToAnim(clickedNode.x, clickedNode.y, onFinish, onNewFrame);
         } 
     }
 
     static reset() {
+
+        Game.ignoreClicks = true;
 
         const lastNode = Game.playerCurrentNode;
 
@@ -183,7 +187,9 @@ export class Game {
 
         for (const [node, sprite] of Game.trash) {
             sprite.moveTo(node.x, node.y);
-            sprite.setVisibleAnim(true);
+            sprite.setVisibleAnim(true, () => {
+                Game.ignoreClicks = false;
+            });
         }
 
         document.getElementById("buttons").classList.remove("blinking-bg");
@@ -292,7 +298,14 @@ export class Game {
 
     static drawAISolution() {
         
-        Game.robot.setVisible(true);
+        UI.setButtonsEnabled(false);
+
+        const robotThinkingTime = 500;     // delay before making next turn (in ms)
+
+        Game.robot.setVisibleAnim(true, (totalDur) => {
+            setTimeout(moveToNextNode, totalDur+robotThinkingTime);
+            // wait for trash to be refilled (first they are minimized, then maximized; i.e. 2 anim cycles)
+        });
 
         // find solution
         const start = GameMap.nodes[0];
@@ -326,7 +339,10 @@ export class Game {
 
         // refill trash
         for (const [_, sprite] of Game.trash) {
-            sprite.img.src = Game.SRC_TRASH_FULL;
+            sprite.setVisibleAnim(false, () => {
+                sprite.img.src = Game.SRC_TRASH_FULL;
+                sprite.setVisibleAnim(true);
+            });
         }
 
         Game.ctx.setLineDash([10, 10]);
@@ -344,6 +360,7 @@ export class Game {
                 Game.ctx.setLineDash([]);
 
                 document.getElementById("buttons").classList.add("blinking-bg");
+                UI.setButtonsEnabled(true);
                 return;
             }
 
@@ -367,15 +384,13 @@ export class Game {
 
             setTimeout(() => {
                 moveToNextNode();       // wait before moving to next trash
-            }, 250);
+            }, robotThinkingTime);
         }
 
         function onNewFrame(progress) {
             Game.robotScore = oldRobotScore + edgeWeight * progress;
             Game.updateRobotScoreText();
         }
-
-        setTimeout(moveToNextNode, 1000);
     }
 
     static emptyTrash(node) {

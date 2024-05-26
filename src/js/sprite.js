@@ -146,7 +146,7 @@ export class Sprite {
                 clearInterval(this.intervalId);
 
                 this.setVisible(toVisible);
-                onFinish();
+                onFinish((dist/dx)*interval);           // param is duration in ms
             }
             else {
                 this.setSize(currentWidth, currentHeight);
@@ -219,7 +219,7 @@ export class Sprite {
             if ((moveRight && this.x+dx >= x) || (!moveRight && this.x+dx <= x)) {
                 this.moveTo(x, y, false);
                 clearInterval(this.intervalId);
-                onFinish();
+                onFinish((distX/dx)*interval);           // param is duration in ms
             }
             else {
                 this.moveBy(dx, dy);

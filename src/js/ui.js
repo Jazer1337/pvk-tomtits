@@ -13,6 +13,10 @@ export class UI {
         btnLast.disabled = true;
 
         btnLast.addEventListener("click", () => {
+            if (Game.ignoreClicks) {
+                return;
+            }
+            
             if (Game.level > 0) {
                 Game.nextLevel(-1);
                 span.innerHTML = "Nivå " + (Game.level+1);
@@ -24,6 +28,10 @@ export class UI {
         });
         
         btnNext.addEventListener("click", () => {
+            if (Game.ignoreClicks) {
+                return;
+            }
+
             if (Game.level < 2) {
                 Game.nextLevel(+1);
                 span.innerHTML = "Nivå " + (Game.level+1);
@@ -35,16 +43,39 @@ export class UI {
         });
 
         btnNew.addEventListener("click", () => {
+            if (Game.ignoreClicks) {
+                return;
+            }
             Game.nextLevel(0);      // no change in level just regenerates random trash
         });
 
         // reset button
         let btn = document.getElementById("button-reset-level");
-        btn.addEventListener("click", Game.reset);
+        btn.addEventListener("click", () => {
+            if (Game.ignoreClicks) {
+                return;
+            }
+            Game.reset()
+        });
 
         document.addEventListener("contextmenu", event => {
             event.preventDefault();
         });
 
+    }
+
+    static setButtonsEnabled(bool) {
+        for (const btn of document.getElementById("buttons").getElementsByTagName("button")) {
+            
+            if (bool) {
+                if (btn.oldDisabled) {
+                    continue;
+                }
+            }
+            else {
+                btn.oldDisabled = btn.disabled;     // add custom prop to remember when enabling
+            }
+            btn.disabled = !bool;
+        }
     }
 }
