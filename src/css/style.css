@@ -1,6 +1,6 @@
 
 canvas {  
-    background-image: url("map.svg");
+    background-image: url("../img/map.svg");
     background-size: cover;
 }
 
@@ -114,4 +114,12 @@ button > img {
 @keyframes blink-bg {
     30%, 70% { background-color: var(--background-color); }
     0%, 100% { background-color: lightblue; }
+}
+
+.shadow {
+    filter: drop-shadow(0 0 3px);
+}
+
+#score img {
+    filter: drop-shadow(0 0 1px);
 }

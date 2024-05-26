@@ -35,6 +35,8 @@ export class Sprite {
         
         document.getElementById("column-1").appendChild(this.img);
 
+        this.img.classList.add("shadow");
+
         this.img.src = imgSrc;
         this.img.onload = () => {
             this.sizeRatio = this.img.width / this.img.height;

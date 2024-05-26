@@ -6,8 +6,8 @@ import { Sprite } from "./sprite.js";
 
 export class Game {
     
-    static SRC_TRASH_EMPTY = "./src/css/trash_empty.svg";
-    static SRC_TRASH_FULL = "./src/css/trash_full.svg";
+    static SRC_TRASH_EMPTY = "./src/img/trash_empty.svg";
+    static SRC_TRASH_FULL = "./src/img/trash_full.svg";
 
     static canvas = document.getElementById('canvas');
     static canvasRect;
@@ -53,11 +53,11 @@ export class Game {
         const y = Game.startNode.y;
 
         // setup truck
-        Game.player = new Sprite("./src/css/garbage_truck.svg", 150, x, y);
+        Game.player = new Sprite("./src/img/garbage_truck.svg", 150, x, y);
         Game.player.img.style.zIndex = 1;                                        // show on top of trash cans
 
         // setup robot
-        Game.robot = new Sprite("./src/css/ai_robot.png", 100, x, y, false);
+        Game.robot = new Sprite("./src/img/ai_robot.png", 100, x, y, false);
         Game.robot.img.style.zIndex = 1;
         
         // create sprites and save (they will be reused)
