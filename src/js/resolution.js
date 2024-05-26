@@ -9,6 +9,8 @@ export class Resolution {
 
         const marginBetweenCols = parseInt(window.getComputedStyle(document.getElementById("column-2")).marginLeft);
 
+        const infoBoxHeight = parseInt(window.getComputedStyle(document.getElementById("info")).height)
+
         const margin = 20;
 
         const desiredW = 1920 + 350;
@@ -17,7 +19,7 @@ export class Resolution {
         let desiredRatio = desiredW / desiredH;
         
         let winW = window.innerWidth - 2*margin - marginBetweenCols;
-        let winH = window.innerHeight - 2*margin;
+        let winH = window.innerHeight - 2*margin - infoBoxHeight;
         
         let winRatio = winW / winH;
         

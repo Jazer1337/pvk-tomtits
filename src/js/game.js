@@ -41,8 +41,18 @@ export class Game {
 
     static scoreCompareElem;
 
+    static drawNodeNumber = false;
+
     static setup() {
-        
+
+        // NOTE: temp
+        document.addEventListener("keydown", event => {
+            if (event.key === "1") {
+                Game.drawNodeNumber = !Game.drawNodeNumber;
+                Game.reset();
+            }
+        });
+
         Game.startNode = GameMap.nodes[0];
 
         Game.playerScoreElem = document.getElementById("score-player").getElementsByTagName("div")[0];
@@ -264,11 +274,13 @@ export class Game {
         Game.ctx.arc(node.x, node.y, Resolution.circleRadius, 0, Math.PI * 2);
         Game.ctx.fill();
 
-        Game.ctx.font = '30px Arial';             // Set font size and family
-        Game.ctx.fillStyle = 'blue';              // Set text color
-        Game.ctx.textAlign = 'center';            // Set text alignment
-        Game.ctx.textBaseline = 'middle';         // Set text baseline
-        Game.ctx.fillText(node.name, node.x+40, node.y);
+        if (Game.drawNodeNumber) {
+            Game.ctx.font = '30px Arial';             // Set font size and family
+            Game.ctx.fillStyle = 'blue';              // Set text color
+            Game.ctx.textAlign = 'center';            // Set text alignment
+            Game.ctx.textBaseline = 'middle';         // Set text baseline
+            Game.ctx.fillText(node.name, node.x+40, node.y);
+        }
 
     }
 

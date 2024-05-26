@@ -10,68 +10,73 @@
 
 <body>
 
-    <div id="columns">   
+    <div id="rows">
+    
+        <div id="columns">   
 
-        <div id="column-1" class="column">
-            <canvas id="canvas"></canvas>
+            <div id="column-1">
+                <canvas id="canvas"></canvas>
+            </div>
+
+            <div id="column-2">
+                <div id="score">
+                    <div id="score-player">
+                        <img src="./src/img/garbage_truck.svg">
+                        <div>0 meter</div>
+                    </div>
+                    <div id="score-robot">
+                        <img src="./src/img/ai_robot.png">
+                        <div>0 meter</div>
+                    </div>
+                </div>
+
+                <div id="score-compare"></div>
+
+                <div id="buttons">
+                    <div>
+                        <span id="span-level">Nivå 1</span>
+                    </div>
+
+                    <div>
+                        <button id="button-next-level">
+                            <img src="./src/img/arrow_right.svg">
+                            Nästa nivå
+                        </button>
+                    </div>
+
+                    <div>
+                        <button id="button-last-level">
+                            <img src="./src/img/arrow_left.svg">
+                            Förra nivån
+                        </button>
+                    </div>
+
+                    <div>
+                        <button id="button-reset-level">
+                            <img src="./src/img/restart.svg">
+                            Börja om nivån
+                        </button>
+                    </div>
+
+                    <div>
+                        <button id="button-new-trash">
+                            <img src="./src/img/trash_full.svg">
+                            Nya soptunnor
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <div id="column-2" class="column">
-
-            <div id="info">
+        <div id="info">
+            <img src="./src/img/info.svg">
+            <div>
                 Ditt uppdrag är att plocka upp allt skräp på så kort sträcka
                 som möjligt och sedan återvända till startpunkten (högst upp till vänster).
-                <br><br>Därefter kommer en AI försöka hitta en kortare väg.
-            </div>
-
-            <div id="score-compare"></div>
-
-            <div id="score">
-                <div id="score-player">
-                    <img src="./src/img/garbage_truck.svg">
-                    <div>0 meter</div>
-                </div>
-                <div id="score-robot">
-                    <img src="./src/img/ai_robot.png">
-                    <div>0 meter</div>
-                </div>
-            </div>
-
-            <div id="buttons">
-                <div>
-                    <span id="span-level">Nivå 1</span>
-                </div>
-
-                <div>
-                    <button id="button-next-level">
-                        <img src="./src/img/arrow_right.svg">
-                        Nästa nivå
-                    </button>
-                </div>
-
-                <div>
-                    <button id="button-last-level">
-                        <img src="./src/img/arrow_left.svg">
-                        Förra nivån
-                    </button>
-                </div>
-
-                <div>
-                    <button id="button-reset-level">
-                        <img src="./src/img/restart.svg">
-                        Börja om nivån
-                    </button>
-                </div>
-
-                <div>
-                    <button id="button-new-trash">
-                        <img src="./src/img/trash_full.svg">
-                        Nya soptunnor
-                    </button>
-                </div>
+                Därefter kommer en AI försöka hitta en kortare väg.
             </div>
         </div>
-
     </div>
 
 </body>
