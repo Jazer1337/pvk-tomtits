@@ -1,23 +1,135 @@
-#canvas-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 50px;
-}
-
 
 canvas {  
-    border: 1px solid black;
-    background-image: url("map.svg");
+    background-image: url("../img/map.svg");
     background-size: cover;
-   
-    /* NOTE: don't set width and height here. Size is set in js */
 }
 
-p {
-    display: flex;
-    justify-content: center;
+html, body {
+    margin: 0;
 }
 
 body {
-    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+
+    user-select: none;         /* Modern browsers */
+    -webkit-user-select: none;  /* Safari */
+    -moz-user-select: none;     /* Firefox */
+    -ms-user-select: none;      /* Internet Explorer/Edge */
+}
+
+body, button {
+    font-size: 18px;
+}
+
+#columns {
+    display: flex;
+}
+
+#rows {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+}
+
+#columns > div {
+    border: 5px solid black;
+}
+
+#column-2 {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin-left: 10px;
+}
+
+#score > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+#score-compare {
+    text-align: center
+}
+
+#score-player > div,
+#score-robot > div {
+    margin-right: 15px;     /* contains text of "x meter" */
+}
+
+#buttons > div {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 5px;
+    height: 50px;
+    align-items: center;
+}
+
+#buttons img {
+    height: 100%;
+}
+
+#column-2 > div {
+    margin: 15px;
+    padding: 5px;
+    border: 1px solid gray;
+    background-color: lightgray;
+    border-radius: 5px;
+}
+
+#info {
+    background-color: lightblue;
+    
+    border-radius: 5px;
+    border: 1px solid gray;
+    
+    max-width: 50%;
+    margin-top: 10px;
+    padding: 10px;
+    
+    display: flex;
+}
+
+#info > img {
+    height: 50px;
+    margin-right: 10px;
+    align-self: center;
+}
+
+button {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+button > img {
+    margin-right: 10px;
+}
+
+#buttons {
+    --background-color: lightgray;
+}
+
+.blinking-bg {
+    animation: blink-bg 2s infinite;
+}
+
+@keyframes blink-bg {
+    30%, 70% { background-color: var(--background-color); }
+    0%, 100% { background-color: lightblue; }
+}
+
+.shadow {
+    filter: drop-shadow(0 0 3px);
+}
+
+#score img {
+    filter: drop-shadow(0 0 1px);
 }

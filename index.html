@@ -4,17 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mini Metro Demo</title>
-    <script defer src="./src/js/bundle.js"></script>
     <link rel="stylesheet" href="./src/css/style.css">
+    <script defer src="./src/js/bundle.js"></script>
 </head>
 
 <body>
 
-    <div id="canvas-container">
-        <canvas id="canvas"></canvas>
-    </div>
+    <div id="rows">
+    
+        <div id="columns">   
 
-    <p id="count"></p>
+            <div id="column-1">
+                <canvas id="canvas"></canvas>
+            </div>
+
+            <div id="column-2">
+                <div id="score">
+                    <div id="score-player">
+                        <img src="./src/img/garbage_truck.svg">
+                        <div>0 meter</div>
+                    </div>
+                    <div id="score-robot">
+                        <img src="./src/img/ai_robot.png">
+                        <div>0 meter</div>
+                    </div>
+                </div>
+
+                <div id="score-compare"></div>
+
+                <div id="buttons">
+                    <div>
+                        <span id="span-level">Nivå 1</span>
+                    </div>
+
+                    <div>
+                        <button id="button-next-level">
+                            <img src="./src/img/arrow_right.svg">
+                            Nästa nivå
+                        </button>
+                    </div>
+
+                    <div>
+                        <button id="button-last-level">
+                            <img src="./src/img/arrow_left.svg">
+                            Förra nivån
+                        </button>
+                    </div>
+
+                    <div>
+                        <button id="button-reset-level">
+                            <img src="./src/img/restart.svg">
+                            Börja om nivån
+                        </button>
+                    </div>
+
+                    <div>
+                        <button id="button-new-trash">
+                            <img src="./src/img/trash_full.svg">
+                            Nya soptunnor
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="info">
+            <img src="./src/img/info.svg">
+            <div>
+                Ditt uppdrag är att plocka upp allt skräp på så kort sträcka
+                som möjligt och sedan återvända till startpunkten (högst upp till vänster).
+                Därefter kommer en AI försöka hitta en kortare väg.
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
