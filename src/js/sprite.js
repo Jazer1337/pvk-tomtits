@@ -68,6 +68,16 @@ export class Sprite {
         }
     }
 
+    setClass(cls, enabled) {
+        if (enabled) {
+            this.img.classList.add(cls);
+        }
+        else {
+            this.img.classList.remove(cls);
+        }
+    }
+
+
     setSize(w, h=null) {
         
         const centerX = this.x + this.width/2;

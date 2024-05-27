@@ -23,6 +23,7 @@ export class Game {
     
     static ignoreClicks = false;        // due to resetting
 
+    static PLAYER_LINE_WIDTH = 2;
     static PLAYER_PATH_COLOR = "rgba(255, 0, 0, 0.5)";
     static playerTrashCollected = [];       // nodes corresponding to those in `allTrashSprites`
     static playerScore = 0;
@@ -30,6 +31,7 @@ export class Game {
     static player;      // Sprite
     static playerScoreElem;
     
+    static ROBOT_LINE_WIDTH = 5;
     static ROBOT_PATH_COLOR = "rgba(0, 0, 255, 0.5)";
     static robotScore = 0;
     static robot;       // Sprite
@@ -51,6 +53,17 @@ export class Game {
                 Game.drawNodeNumber = !Game.drawNodeNumber;
                 Game.reset();
             }
+            else if (event.key === "2") {
+                Game.drawAISolution();
+            }
+            else if (event.key === "ArrowUp") {
+                Resolution.setFontSize(Resolution.fontSize+2);
+                Game.updateImagesPosition();
+            }
+            else if (event.key === "ArrowDown") {
+                Resolution.setFontSize(Resolution.fontSize-2);
+                Game.updateImagesPosition();
+            }
         });
 
         Game.startNode = GameMap.nodes[0];
@@ -63,6 +76,8 @@ export class Game {
 
         const x = Game.startNode.x;
         const y = Game.startNode.y;
+
+        Game.startNodeSprite = new Sprite("./src/img/starting_node.svg", 100, x, y);
 
         // setup truck
         Game.player = new Sprite("./src/img/garbage_truck.svg", 150, x, y);
@@ -117,21 +132,18 @@ export class Game {
             Game.player.setHorizontalFlip(clickedNode.x < Game.playerCurrentNode.x)
 
 
-            Game.drawLine(Game.playerCurrentNode, clickedNode, Game.PLAYER_PATH_COLOR);
+            Game.drawLine(Game.playerCurrentNode, clickedNode, Game.PLAYER_PATH_COLOR, Game.PLAYER_LINE_WIDTH);
             Game.playerCurrentNode = clickedNode;
 
             function onFinish() {
 
-                let collect = true;
-                for (const node of Game.playerTrashCollected) {
-                    if (node == clickedNode) {
-                        collect = false;
-                        break;
-                    }
-                }
-
-                if (collect && Game.emptyTrash(clickedNode)) {
+                if (!Game.playerTrashCollected.includes(clickedNode) && Game.emptyTrash(clickedNode)) {
                     Game.playerTrashCollected.push(clickedNode);
+
+                    // start blinking for startNode
+                    if (Game.playerTrashCollected.length == Game.trash.length) {
+                        Game.startNodeSprite.setClass("zoom-animation", true);
+                    }
                 };
 
                 if (Game.playerCurrentNode == Game.startNode && Game.playerTrashCollected.length == Game.trash.length){
@@ -139,6 +151,7 @@ export class Game {
 
                     Game.updatePlayerScoreText(true);
                     Game.drawAISolution();
+                    Game.startNodeSprite.setClass("zoom-animation", false);
                 }
                 else {
                     Game.playerScore = oldPlayerScore + edgeWeight;
@@ -156,6 +169,25 @@ export class Game {
             Game.ignoreClicks = true;
             Game.player.moveToAnim(clickedNode.x, clickedNode.y, onFinish, onNewFrame);
         } 
+    }
+
+    // after resizing window or font
+    static updateImagesPosition() {
+        Game.canvasRect = Game.canvas.getBoundingClientRect();
+        Game.player.moveTo(Game.playerCurrentNode.x, Game.playerCurrentNode.y);
+        
+        // Game.robot.moveTo(Game.robotCurrentNode);
+        
+        for (const sprite of Game.allTrashSprites) {
+            for (const [node, spr] of Game.trash) {
+                if (spr === sprite) {
+                    sprite.moveTo(node.x, node.y);
+                    break;
+                }
+            }
+        }
+
+        Game.startNodeSprite.moveTo(Game.startNode.x, Game.startNode.y);
     }
 
     static reset() {
@@ -203,6 +235,21 @@ export class Game {
         }
 
         document.getElementById("buttons").classList.remove("blinking-bg");
+        
+        Game.startNodeSprite.setClass("zoom-animation", false);
+        
+        for (const sprite of Game.allTrashSprites) {
+            
+            sprite.setClass("zoom-animation", false);
+
+            // must wait for class to be removed
+            const iId = setTimeout(() => {
+                if (!sprite.img.classList.contains("zoom-animation")) {
+                    sprite.setClass("zoom-animation", true);
+                    clearInterval(iId);
+                };
+            }, 1000);
+        }
 
     }
 
@@ -284,9 +331,9 @@ export class Game {
 
     }
 
-    static drawLine(node1, node2, color) {
+    static drawLine(node1, node2, color, width) {
         Game.ctx.strokeStyle = color;
-        Game.ctx.lineWidth = 2;
+        Game.ctx.lineWidth = width;
         Game.ctx.beginPath();
         Game.ctx.moveTo(node1.x, node1.y);
         Game.ctx.lineTo(node2.x, node2.y);
@@ -331,29 +378,12 @@ export class Game {
 
         let robotIdx = 0;      // first idx of `path`
 
-        let robotUndrawnRoads = [];
-        for (let i=0; i<robotPath.nodes.length-1; i++) {
-            const node1 = robotPath.nodes[i];
-            const node2 = robotPath.nodes[i+1];
-
-            let add = true;
-            for (const [n1, n2] of robotUndrawnRoads) {
-                if (n1 == node2 && n2 == node1) {
-                    add = false;
-                    break;
-                }
-            }
-
-            if (add) {
-                robotUndrawnRoads.push([node1, node2]);
-            }
-        }
-
         // refill trash
         for (const [_, sprite] of Game.trash) {
             sprite.setVisibleAnim(false, () => {
                 sprite.img.src = Game.SRC_TRASH_FULL;
                 sprite.setVisibleAnim(true);
+                sprite.setClass("zoom-animation", true);
             });
         }
 
@@ -362,6 +392,7 @@ export class Game {
         let oldRobotScore;
         let edgeWeight;
         let newNode;
+        let robotTrashCollected = [];
 
         function moveToNextNode() {
             robotIdx++;
@@ -372,6 +403,7 @@ export class Game {
                 Game.ctx.setLineDash([]);
 
                 document.getElementById("buttons").classList.add("blinking-bg");
+                Game.startNodeSprite.setClass("zoom-animation", false);
                 UI.setButtonsEnabled(true);
                 return;
             }
@@ -379,7 +411,7 @@ export class Game {
             newNode = robotPath.nodes[robotIdx];
             const oldNode = robotPath.nodes[robotIdx-1];
 
-            Game.drawLine(oldNode, newNode, Game.ROBOT_PATH_COLOR);
+            Game.drawLine(oldNode, newNode, Game.ROBOT_PATH_COLOR, Game.ROBOT_LINE_WIDTH);
 
             oldRobotScore = Game.robotScore;
             edgeWeight = GameMap.graph.getWeight(oldNode, newNode) * Resolution.SCALE;
@@ -388,8 +420,17 @@ export class Game {
         }
 
         function onFinish() {
-            Game.emptyTrash(newNode);  // NOTE: will empty even if already empty, but doesn't matter
-                                       // since it's not being tracked.
+            
+            if (robotTrashCollected.length < Game.trash.length) {
+                
+                if (!robotTrashCollected.includes(newNode) && Game.emptyTrash(newNode)) {
+                    robotTrashCollected.push(newNode);
+                };
+                
+                if (robotTrashCollected.length == Game.trash.length) {
+                    Game.startNodeSprite.setClass("zoom-animation", true);
+                }
+            }
 
             Game.robotScore = oldRobotScore + edgeWeight;
             Game.updateRobotScoreText();
@@ -409,6 +450,7 @@ export class Game {
         for (const [n, sprite] of Game.trash) {
             if (n == node) {
                 sprite.img.src = Game.SRC_TRASH_EMPTY;
+                sprite.setClass("zoom-animation", false);
                 return true;
             }
         }
