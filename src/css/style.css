@@ -133,3 +133,24 @@ button > img {
 #score img {
     filter: drop-shadow(0 0 1px);
 }
+
+
+/* Keyframes for zooming in and out */
+@keyframes zoomInOut {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.5); /* Scale up to 120% */
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  
+/* CSS class for the zoom animation */
+.zoom-animation {
+    animation: zoomInOut 3s infinite; /* Adjust the duration (3s) as needed */
+    transition: transform 0.5s ease-in-out; /* Optional: smooth out the zoom transition */
+}
+  

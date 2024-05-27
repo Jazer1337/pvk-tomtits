@@ -64,6 +64,8 @@ export class Game {
         const x = Game.startNode.x;
         const y = Game.startNode.y;
 
+        Game.startNodeSprite = new Sprite("./src/img/starting_node.svg", 100, x, y);
+
         // setup truck
         Game.player = new Sprite("./src/img/garbage_truck.svg", 150, x, y);
         Game.player.img.style.zIndex = 1;                                        // show on top of trash cans
@@ -122,16 +124,13 @@ export class Game {
 
             function onFinish() {
 
-                let collect = true;
-                for (const node of Game.playerTrashCollected) {
-                    if (node == clickedNode) {
-                        collect = false;
-                        break;
-                    }
-                }
-
-                if (collect && Game.emptyTrash(clickedNode)) {
+                if (!Game.playerTrashCollected.includes(clickedNode) && Game.emptyTrash(clickedNode)) {
                     Game.playerTrashCollected.push(clickedNode);
+
+                    // start blinking for startNode
+                    if (Game.playerTrashCollected.length == Game.trash.length) {
+                        Game.startNodeSprite.setClass("zoom-animation", true);
+                    }
                 };
 
                 if (Game.playerCurrentNode == Game.startNode && Game.playerTrashCollected.length == Game.trash.length){
@@ -139,6 +138,7 @@ export class Game {
 
                     Game.updatePlayerScoreText(true);
                     Game.drawAISolution();
+                    Game.startNodeSprite.setClass("zoom-animation", false);
                 }
                 else {
                     Game.playerScore = oldPlayerScore + edgeWeight;
@@ -203,6 +203,21 @@ export class Game {
         }
 
         document.getElementById("buttons").classList.remove("blinking-bg");
+        
+        Game.startNodeSprite.setClass("zoom-animation", false);
+        
+        for (const sprite of Game.allTrashSprites) {
+            
+            sprite.setClass("zoom-animation", false);
+
+            // must wait for class to be removed
+            const iId = setTimeout(() => {
+                if (!sprite.img.classList.contains("zoom-animation")) {
+                    sprite.setClass("zoom-animation", true);
+                    clearInterval(iId);
+                };
+            }, 1000);
+        }
 
     }
 
@@ -331,29 +346,12 @@ export class Game {
 
         let robotIdx = 0;      // first idx of `path`
 
-        let robotUndrawnRoads = [];
-        for (let i=0; i<robotPath.nodes.length-1; i++) {
-            const node1 = robotPath.nodes[i];
-            const node2 = robotPath.nodes[i+1];
-
-            let add = true;
-            for (const [n1, n2] of robotUndrawnRoads) {
-                if (n1 == node2 && n2 == node1) {
-                    add = false;
-                    break;
-                }
-            }
-
-            if (add) {
-                robotUndrawnRoads.push([node1, node2]);
-            }
-        }
-
         // refill trash
         for (const [_, sprite] of Game.trash) {
             sprite.setVisibleAnim(false, () => {
                 sprite.img.src = Game.SRC_TRASH_FULL;
                 sprite.setVisibleAnim(true);
+                sprite.setClass("zoom-animation", true);
             });
         }
 
@@ -362,6 +360,7 @@ export class Game {
         let oldRobotScore;
         let edgeWeight;
         let newNode;
+        let robotTrashCollected = [];
 
         function moveToNextNode() {
             robotIdx++;
@@ -372,6 +371,7 @@ export class Game {
                 Game.ctx.setLineDash([]);
 
                 document.getElementById("buttons").classList.add("blinking-bg");
+                Game.startNodeSprite.setClass("zoom-animation", false);
                 UI.setButtonsEnabled(true);
                 return;
             }
@@ -388,8 +388,17 @@ export class Game {
         }
 
         function onFinish() {
-            Game.emptyTrash(newNode);  // NOTE: will empty even if already empty, but doesn't matter
-                                       // since it's not being tracked.
+            
+            if (robotTrashCollected.length < Game.trash.length) {
+                
+                if (!robotTrashCollected.includes(newNode) && Game.emptyTrash(newNode)) {
+                    robotTrashCollected.push(newNode);
+                };
+                
+                if (robotTrashCollected.length == Game.trash.length) {
+                    Game.startNodeSprite.setClass("zoom-animation", true);
+                }
+            }
 
             Game.robotScore = oldRobotScore + edgeWeight;
             Game.updateRobotScoreText();
@@ -409,6 +418,7 @@ export class Game {
         for (const [n, sprite] of Game.trash) {
             if (n == node) {
                 sprite.img.src = Game.SRC_TRASH_EMPTY;
+                sprite.setClass("zoom-animation", false);
                 return true;
             }
         }
