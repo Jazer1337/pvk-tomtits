@@ -5,6 +5,8 @@ export class Resolution {
     
     static circleRadius = 10;       // for 1920x1080
 
+    static fontSize = 18;
+
     static setup() {  
 
         const marginBetweenCols = parseInt(window.getComputedStyle(document.getElementById("column-2")).marginLeft);
@@ -64,6 +66,20 @@ export class Resolution {
         const scoreRobotImg = scoreRobot.getElementsByTagName("img")[0];
         scoreRobotImg.style.width = 75 / this.SCALE + "px";
 
+        
+        this.setFontSize(this.fontSize);
+    }
+
+    static setFontSize(fontSize) {
+        this.fontSize = fontSize;
+
+        const body = document.getElementsByTagName("body")[0];
+        body.style.fontSize = fontSize + "px";
+
+        const btns = document.getElementsByTagName("button");
+        for (const btn of btns) {
+            btn.style.fontSize = fontSize + "px";
+        }
     }
 
 }

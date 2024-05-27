@@ -2,7 +2,11 @@ import { Game } from "./game.js";
 
 export class UI {
 
+    static INACTIVITY_THRESHOLD = 120 * 1000;  // in ms
+
     static setup() {
+
+        UI.setupResetWhenInactive();
 
         // level button
         const btnNext = document.getElementById("button-next-level");
@@ -62,6 +66,25 @@ export class UI {
             event.preventDefault();
         });
 
+    }
+
+    static setupResetWhenInactive() {
+        function addTimeout() {
+            return setTimeout(() => {
+                Game.level = 0;
+                Game.nextLevel(0);
+                resetTimeout = addTimeout();
+            }, UI.INACTIVITY_THRESHOLD);
+
+        }
+
+        const body = document.getElementsByTagName("body")[0];
+        body.addEventListener("click", () => {
+            clearTimeout(resetTimeout);
+            resetTimeout = addTimeout();
+        });
+
+        let resetTimeout = addTimeout();
     }
 
     static setButtonsEnabled(bool) {

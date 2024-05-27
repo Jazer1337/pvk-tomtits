@@ -20,10 +20,6 @@ body {
     -ms-user-select: none;      /* Internet Explorer/Edge */
 }
 
-body, button {
-    font-size: 18px;
-}
-
 #columns {
     display: flex;
 }

@@ -56,6 +56,14 @@ export class Game {
             else if (event.key === "2") {
                 Game.drawAISolution();
             }
+            else if (event.key === "ArrowUp") {
+                Resolution.setFontSize(Resolution.fontSize+2);
+                Game.updateImagesPosition();
+            }
+            else if (event.key === "ArrowDown") {
+                Resolution.setFontSize(Resolution.fontSize-2);
+                Game.updateImagesPosition();
+            }
         });
 
         Game.startNode = GameMap.nodes[0];
@@ -161,6 +169,25 @@ export class Game {
             Game.ignoreClicks = true;
             Game.player.moveToAnim(clickedNode.x, clickedNode.y, onFinish, onNewFrame);
         } 
+    }
+
+    // after resizing window or font
+    static updateImagesPosition() {
+        Game.canvasRect = Game.canvas.getBoundingClientRect();
+        Game.player.moveTo(Game.playerCurrentNode.x, Game.playerCurrentNode.y);
+        
+        // Game.robot.moveTo(Game.robotCurrentNode);
+        
+        for (const sprite of Game.allTrashSprites) {
+            for (const [node, spr] of Game.trash) {
+                if (spr === sprite) {
+                    sprite.moveTo(node.x, node.y);
+                    break;
+                }
+            }
+        }
+
+        Game.startNodeSprite.moveTo(Game.startNode.x, Game.startNode.y);
     }
 
     static reset() {
