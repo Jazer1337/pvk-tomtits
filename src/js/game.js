@@ -23,6 +23,7 @@ export class Game {
     
     static ignoreClicks = false;        // due to resetting
 
+    static PLAYER_LINE_WIDTH = 2;
     static PLAYER_PATH_COLOR = "rgba(255, 0, 0, 0.5)";
     static playerTrashCollected = [];       // nodes corresponding to those in `allTrashSprites`
     static playerScore = 0;
@@ -30,6 +31,7 @@ export class Game {
     static player;      // Sprite
     static playerScoreElem;
     
+    static ROBOT_LINE_WIDTH = 5;
     static ROBOT_PATH_COLOR = "rgba(0, 0, 255, 0.5)";
     static robotScore = 0;
     static robot;       // Sprite
@@ -50,6 +52,9 @@ export class Game {
             if (event.key === "1") {
                 Game.drawNodeNumber = !Game.drawNodeNumber;
                 Game.reset();
+            }
+            else if (event.key === "2") {
+                Game.drawAISolution();
             }
         });
 
@@ -119,7 +124,7 @@ export class Game {
             Game.player.setHorizontalFlip(clickedNode.x < Game.playerCurrentNode.x)
 
 
-            Game.drawLine(Game.playerCurrentNode, clickedNode, Game.PLAYER_PATH_COLOR);
+            Game.drawLine(Game.playerCurrentNode, clickedNode, Game.PLAYER_PATH_COLOR, Game.PLAYER_LINE_WIDTH);
             Game.playerCurrentNode = clickedNode;
 
             function onFinish() {
@@ -299,9 +304,9 @@ export class Game {
 
     }
 
-    static drawLine(node1, node2, color) {
+    static drawLine(node1, node2, color, width) {
         Game.ctx.strokeStyle = color;
-        Game.ctx.lineWidth = 2;
+        Game.ctx.lineWidth = width;
         Game.ctx.beginPath();
         Game.ctx.moveTo(node1.x, node1.y);
         Game.ctx.lineTo(node2.x, node2.y);
@@ -379,7 +384,7 @@ export class Game {
             newNode = robotPath.nodes[robotIdx];
             const oldNode = robotPath.nodes[robotIdx-1];
 
-            Game.drawLine(oldNode, newNode, Game.ROBOT_PATH_COLOR);
+            Game.drawLine(oldNode, newNode, Game.ROBOT_PATH_COLOR, Game.ROBOT_LINE_WIDTH);
 
             oldRobotScore = Game.robotScore;
             edgeWeight = GameMap.graph.getWeight(oldNode, newNode) * Resolution.SCALE;
