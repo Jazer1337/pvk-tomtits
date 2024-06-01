@@ -47,16 +47,9 @@ export class Game {
 
     static setup() {
 
-        // NOTE: temp
+        // click up/down arrow to increase/decrease font size
         document.addEventListener("keydown", event => {
-            if (event.key === "1") {
-                Game.drawNodeNumber = !Game.drawNodeNumber;
-                Game.reset();
-            }
-            else if (event.key === "2") {
-                Game.drawAISolution();
-            }
-            else if (event.key === "ArrowUp") {
+            if (event.key === "ArrowUp") {
                 Resolution.setFontSize(Resolution.fontSize+2);
                 Game.updateImagesPosition();
             }
